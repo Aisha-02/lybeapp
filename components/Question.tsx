@@ -29,7 +29,7 @@ const Question = ({ title, type, options, selectedValues, onSelect, onPickImage 
     }),
     color: animatedLabel.interpolate({
       inputRange: [0, 1],
-      outputRange: [Colors.background, Colors.buttonBackground|| '#000'],
+      outputRange: ['#FFD93D', Colors.buttonBackground|| '#000'],
     }),
     zIndex: 1,
   };

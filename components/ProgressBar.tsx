@@ -1,21 +1,48 @@
 import React from 'react';
-import { View } from 'react-native';
+import { View, StyleSheet } from 'react-native';
+import {LinearGradient} from 'expo-linear-gradient';
 
-const ProgressBar = ({ current, total }: { current: number, total: number }) => {
-  const progress = ((current + 1) / total) * 100;
+interface ProgressBarProps {
+  currentStep: number;
+  totalSteps: number;
+}
+
+const ProgressBar: React.FC<ProgressBarProps> = ({ currentStep, totalSteps }) => {
+  const safeStep = Math.min(currentStep, totalSteps);
+  const progress = totalSteps > 0 ? (safeStep / totalSteps) * 100 : 0;
 
   return (
-    <View style={{ height: 6, backgroundColor: '#333', width: '100%' }}>
-      <View
-        style={{
-          marginTop: 60,
-          height: '100%',
-          backgroundColor: '#1DB954', // Spotify green
-          width: `${progress}%`,
-        }}
-      />
+    <View style={styles.container}>
+      <View style={styles.backgroundBar}>
+        {progress > 0 && (
+          <LinearGradient
+            colors={['#FFD93D', '#F2547D']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={[styles.progressBar, { width: `${progress}%` }]}
+          />
+        )}
+      </View>
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    zIndex: 2,
+    paddingHorizontal: 20,
+    marginTop: 60,
+  },
+  backgroundBar: {
+    height: 12,
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    overflow: 'hidden',
+  },
+  progressBar: {
+    height: '100%',
+    borderRadius: 20,
+  },
+});
 
 export default ProgressBar;

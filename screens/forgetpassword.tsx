@@ -55,7 +55,7 @@ const ForgetPasswordScreen = ({ navigation }: any) => {
         <Ionicons name="mail-outline" size={24} color="#888" style={styles.inputIcon} />
       </View>
 
-      <TouchableOpacity style={styles.loginButton} onPress={ForgetPasswordScreen}>
+      <TouchableOpacity style={styles.loginButton} onPress={handleForgetPassword}>
         <LinearGradient
         // Adding gradient to the button with 4 shades
           colors={['#E100FF', '#2575fc', '#1C15ED', '#0544BA']}   

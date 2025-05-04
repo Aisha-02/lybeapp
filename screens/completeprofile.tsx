@@ -1,20 +1,31 @@
-import React, { useState } from 'react';
-import { ScrollView, TouchableOpacity, Text, View, TextInput , SafeAreaView} from 'react-native';
+import React, { useState, useRef } from 'react';
+import {
+  Animated,
+  ScrollView,
+  TouchableOpacity,
+  Text,
+  View,
+  SafeAreaView,
+  Dimensions,
+  PanResponder,
+} from 'react-native';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { doc, setDoc } from 'firebase/firestore';
-import { getFirestore } from 'firebase/firestore';
+import { doc, setDoc, getFirestore } from 'firebase/firestore';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import Question from '../components/Question';
 import ProgressBar from '../components/ProgressBar';
-import { Colors } from '../constants/Colors';
 import styles from '../styles/PrefereneStyles';
 
+const { width } = Dimensions.get('window');
+
 const vibeOptions = ['Chill AF 🤘', 'Party Animal 🥳', 'Hopeless Romantic 🔥', 'Filmy & Dramatic 🎬', 'Meme Lord 😂', 'Rizzy 😍'];
-const musicOptions = ['Bollywood', 'Indie', 'Hip-Hop/Rap', 'LO-FI', 'Pop', 'Rock', 'Sufi', 'Classical'];
+const musicOptions = ['Bollywood', 'Indie', 'Hip-Hop/Rap', 'Lo-Fi', 'Pop', 'Rock', 'Sufi', 'Classical'];
 const connectionVibes = ['Deep conversations', 'Fun and Flirty', 'Just vibing with music', 'Travel buddy', 'Serious relationship', 'Chill friendships'];
 const musicLanguages = ['Hindi', 'English', 'Punjabi', 'Tamil', 'Telugu', 'Marathi', 'Bengali', 'Other'];
 const openToDifferentTaste = ['Hell yes!', 'Maybe, if we vibe otherwise', 'Nah, music taste is everything'];
+const relationshipOptions = ['Single', 'In a relationship', 'Married', 'Complicated', 'Prefer not to say'];
 
 const CompleteProfile = ({ route, navigation }: any) => {
   const userId = route.params?.uid;
@@ -22,12 +33,15 @@ const CompleteProfile = ({ route, navigation }: any) => {
   const storage = getStorage();
 
   const [currentPage, setCurrentPage] = useState(0);
+  const scrollX = useRef(new Animated.Value(0)).current;
+  const scrollRef = useRef<ScrollView>(null);
+
   const [profilePic, setProfilePic] = useState<string | null>(null);
   const [bio, setBio] = useState('');
   const [currentVibe, setCurrentVibe] = useState('');
   const [birthday, setBirthday] = useState('');
   const [pronouns, setPronouns] = useState('');
-  const [relationshipStatus, setRelationshipStatus] = useState('');
+  const [relationshipStatus, setRelationshipStatus] = useState<string[]>([]);
   const [vibe, setVibe] = useState('');
   const [musicTaste, setMusicTaste] = useState<string[]>([]);
   const [idealConnection, setIdealConnection] = useState('');
@@ -47,99 +61,33 @@ const CompleteProfile = ({ route, navigation }: any) => {
   };
 
   const pages = [
-    // Screen 1
     () => (
       <View>
-        <Question
-          title="'Upload your vibe pic 📸'"
-          type="image"
-          selectedValues={profilePic}
-          onPickImage={pickImage}
-        />
-        <Question
-          title='Write a short and fun bio ✍️'
-          type='text'
-          selectedValues={bio}
-          onSelect={setBio}
-        />
-
-        <Question
-          title='Your current vibe is... 🎯'
-          type='text'
-          selectedValues={currentVibe}
-          onSelect={setCurrentVibe}
-        />
-
-        <Question
-          title='When’s your birthday? 🎂'
-          type='date'
-          selectedValues={birthday}
-          onSelect={setBirthday}
-        />
-
-        <Question
-          title='Relationship status 💞'
-          type='text'
-          selectedValues={relationshipStatus}
-          onSelect={setRelationshipStatus}
-        />
-        <Question
-          title="Your pronouns are... 🏳️‍🌈"
-          type="text"
-          selectedValues={pronouns}
-          onSelect={setPronouns}
-        />
+        <Question title="'Upload your vibe pic 📸'" type="image" selectedValues={profilePic} onPickImage={pickImage} />
+        <Question title='Write a short and fun bio ✍️' type='text' selectedValues={bio} onSelect={setBio} />
+        <Question title='Your current vibe is... 🎯' type='text' selectedValues={currentVibe} onSelect={setCurrentVibe} />
+        <Question title='When’s your birthday? 🎂' type='date' selectedValues={birthday} onSelect={setBirthday} />
+        <Question title="Your pronouns are... 🏳️‍🌈" type="text" selectedValues={pronouns} onSelect={setPronouns} />
       </View>
     ),
-    // Screen 2
     () => (
-      <Question
-        title="Pick one that screams *you* 🌟"
-        type="chip"
-        options={vibeOptions}
-        selectedValues={vibe}
-        onSelect={setVibe}
-      />
+      <Question title="Pick one that screams *you* 🌟" type="chip" options={vibeOptions} selectedValues={vibe} onSelect={setVibe} />
     ),
-    // Screen 3
     () => (
-      <Question
-        title="Your playlist vibes with...? 🎵"
-        type="chip"
-        options={musicOptions}
-        selectedValues={musicTaste}
-        onSelect={(item: string) => toggleSelection(item, musicTaste, setMusicTaste)}
-      />
+      <Question title="Your playlist vibes with...? 🎵" type="chip" options={musicOptions} selectedValues={musicTaste} onSelect={(item: string) => toggleSelection(item, musicTaste, setMusicTaste)} />
     ),
-    // Screen 4
     () => (
-      <Question
-        title="What kind of connection are you really vibing with? 💛"
-        type="chip"
-        options={connectionVibes}
-        selectedValues={idealConnection}
-        onSelect={setIdealConnection}
-      />
+      <Question title="What kind of connection are you really vibing with? 💛" type="chip" options={connectionVibes} selectedValues={idealConnection} onSelect={setIdealConnection} />
     ),
-    // Screen 5
     () => (
-      <>
-        <Question
-          title="Languages you groove to 🔊"
-          type="chip"
-          options={musicLanguages}
-          selectedValues={musicLangPref}
-          onSelect={(item: string) => toggleSelection(item, musicLangPref, setMusicLangPref)}
-        />
-        <Question
-          title="Would you connect with someone who loves different music? 🎶"
-          type="chip"
-          options={openToDifferentTaste}
-          selectedValues={openToDifferentMusic}
-          onSelect={setOpenToDifferentMusic}
-        />
-      </>
+      <Question title="Languages you groove to 🔊" type="chip" options={musicLanguages} selectedValues={musicLangPref} onSelect={(item: string) => toggleSelection(item, musicLangPref, setMusicLangPref)} />
     ),
+    () => (
+      <Question title="Would you connect with someone who loves different music? 🎶" type="chip" options={openToDifferentTaste} selectedValues={openToDifferentMusic} onSelect={setOpenToDifferentMusic} />
+    ),
+    () => (
+      <Question title="What's your relationship status?💕" type="chip" options={relationshipOptions} selectedValues={relationshipStatus} onSelect={(item: string) => toggleSelection(item, relationshipStatus, setRelationshipStatus)} />
+    )
   ];
 
   const toggleSelection = (item: string, list: string[], setter: Function) => {
@@ -176,64 +124,77 @@ const CompleteProfile = ({ route, navigation }: any) => {
         openToDifferentMusic,
       });
 
-      navigation.dispatch(
-        navigation.reset({
-          index: 0,
-          routes: [{ name: 'Home' }],
-        })
-      );
+      navigation.reset({ index: 0, routes: [{ name: 'Home' }] });
     } catch (error) {
       console.error('Error saving preferences:', error);
     }
   };
 
+  const scrollToPage = (page: number) => {
+    scrollRef.current?.scrollTo({ x: page * width, animated: true });
+    setCurrentPage(page);
+  };
+
   return (
-    <View style={{ flex: 1, backgroundColor: '#000' }}>
-      <ProgressBar current={currentPage} total={pages.length} />
-  
-      <View style={{
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: 16,
-      }}>
-        <View style={{
-          backgroundColor: '#fff',
-          borderRadius: 20,
-          padding: 20,
-          width: '100%',
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.3,
-          shadowRadius: 6,
-          elevation: 5,
-        }}>
-          {pages[currentPage]()}
-        </View>
-      </View>
-  
-      <View style={{
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        padding: 20,
-      }}>
-        {currentPage > 0 && (
-          <TouchableOpacity onPress={() => setCurrentPage(currentPage - 1)}>
-            <Ionicons name="arrow-back-circle" size={32} color="#fff" />
-          </TouchableOpacity>
-        )}
-  
+    <LinearGradient colors={['#3A0CA3', '#480CA8', '#4361EE']} style={{ flex: 1 }}>
+      <SafeAreaView style={{ flex: 1 }}>
+        <ProgressBar currentStep={currentPage} totalSteps={pages.length} />
+        <Animated.ScrollView
+          ref={scrollRef}
+          horizontal
+          pagingEnabled
+          showsHorizontalScrollIndicator={false}
+          onMomentumScrollEnd={(e) => {
+            const page = Math.round(e.nativeEvent.contentOffset.x / e.nativeEvent.layoutMeasurement.width);
+            setCurrentPage(page);
+          }}
+          scrollEventThrottle={16}
+          onScroll={Animated.event(
+            [{ nativeEvent: { contentOffset: { x: scrollX } } }],
+            { useNativeDriver: false }
+          )}
+        >
+          {pages.map((Page, index) => (
+            <Animated.View key={index} style={{ width, padding: 20, alignItems: 'center', justifyContent: 'center' }}>
+              <Animated.View style={{
+                backgroundColor: '#F2547D',
+                borderRadius: 25,
+                padding: 20,
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 5 },
+                shadowOpacity: 0.4,
+                shadowRadius: 6,
+                elevation: 5,
+                width: '100%',
+                transform: [{ scale: scrollX.interpolate({
+                  inputRange: [(index - 1) * width, index * width, (index + 1) * width],
+                  outputRange: [0.9, 1, 0.9],
+                  extrapolate: 'clamp',
+                }) }]
+              }}>
+                {Page()}
+              </Animated.View>
+            </Animated.View>
+          ))}
+        </Animated.ScrollView>
+
         {currentPage < pages.length - 1 ? (
-          <TouchableOpacity onPress={() => setCurrentPage(currentPage + 1)}>
-            <Ionicons name="arrow-forward-circle" size={32} color="#fff" />
+          <TouchableOpacity onPress={() => scrollToPage(currentPage + 1)} style={styles.navButton}>
+            <Ionicons name="arrow-forward-circle" size={32} color="#F8AC4B" />
           </TouchableOpacity>
         ) : (
-          <TouchableOpacity onPress={handleSubmit} style={ styles.nextButton}>
+          <TouchableOpacity onPress={handleSubmit} style={styles.nextButton}>
             <Text style={styles.nextButtonText}>Save Preferences</Text>
           </TouchableOpacity>
         )}
-      </View>
-    </View>
+
+        {currentPage > 0 && (
+          <TouchableOpacity onPress={() => scrollToPage(currentPage - 1)} style={styles.navBack}>
+            <Ionicons name="arrow-back-circle" size={32} color="#F8AC4B" />
+          </TouchableOpacity>
+        )}
+      </SafeAreaView>
+    </LinearGradient>
   );
 };
 

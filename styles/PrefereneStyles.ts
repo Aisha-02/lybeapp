@@ -5,16 +5,15 @@ const { width } = Dimensions.get('window');
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
-    padding: 20,
-    paddingBottom: 50,
+    backgroundColor: '#2D005F', // deep purple
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   title: {
-    fontSize: 16,
-    marginTop: 10,
-  fontWeight: '600',
-  marginBottom: 10,
-  color: '#111',
+    fontSize: 28,
+    color: '#fff',
+    fontWeight: 'bold',
+    marginBottom: 10,
   },
   chipContainer: {
     marginTop: 10,
@@ -23,18 +22,23 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   chip: {
-    paddingVertical: 8,
-    paddingHorizontal: 14,
+    backgroundColor: '#F56C57',
     borderRadius: 20,
-    backgroundColor: '#eee',
+    paddingVertical: 10,
+    paddingHorizontal: 18,
+    margin: 6,
+    shadowColor: '#000',
+    shadowOpacity: 0.2,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 3,
   },
   chipSelected: {
-    backgroundColor: '#1DB954',
+    backgroundColor: '#F8AC4B',
   },
   chipText: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: Colors.chipTextUnselected,
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
   },
   chipTextSelected: {
     color: '#fff',
@@ -43,36 +47,48 @@ const styles = StyleSheet.create({
   navButton: {
     position: 'absolute',
     bottom : 20,
-    left: 20,
-    backgroundColor: Colors.buttonBackground, // Optional: Set background color
-    borderRadius: 50,
+    right: 20,
+    borderRadius: 0,
     alignItems: 'center',
     justifyContent: 'center',
     padding: 15,
     zIndex: 1, // Ensures the button is above other elements
+  },
+  navBack: {
+  position: 'absolute',
+  left: 20,
+  bottom: 25,
+  backgroundColor: 'transparent', // or any color you want
+  borderRadius: 30,
+  alignItems: 'center',
+  justifyContent: 'center',
+  padding: 10,
+  zIndex: 1, 
   },
   nextButton: {
     position: 'absolute',
     right: 20,
-    bottom: 20,
-    padding: 15,
-    backgroundColor: Colors.buttonBackground,  // Use your primary color
-    borderRadius: 50,
+    bottom: 25,
+    backgroundColor: '#F8AC4B',
+    paddingVertical: 12,
+    paddingHorizontal: 32,
+    borderRadius: 30,
     alignItems: 'center',
     justifyContent: 'center',
-    zIndex: 1, // Ensures the button is above other elements
+    zIndex: 1,
+    // Ensures the button is above other elements
   },
   nextButtonText: {
-    color: Colors.text,  // Make sure the text is readable
+    color: '#000',
     fontSize: 18,
     fontWeight: '700',
   },
   imagePickerContainer: {
     alignItems: 'center',
-  marginBottom: 10,
+    marginBottom: 10,
   },
   imagePlaceholder: {
-    width: 120,
+  width: 120,
   height: 120,
   borderRadius: 60,
   backgroundColor: '#ddd',
@@ -95,7 +111,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f9f9f9',
   },
   uploadText: {
-    color: Colors.subText,
+    color: '#fff',
     fontSize: 14,
     marginTop: 15,
     textAlign: 'center',
