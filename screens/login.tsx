@@ -1,19 +1,98 @@
-import React, { useState } from 'react';
-import { View, TextInput, Text, TouchableOpacity, Image, SafeAreaView } from 'react-native';
-import { getAuth } from 'firebase/auth';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import React, { useState, useEffect } from 'react';
+import { View, TextInput, Text, TouchableOpacity, Image, Platform } from 'react-native';
+import { signInWithEmailAndPassword, signInWithPopup, signInWithRedirect, getRedirectResult } from 'firebase/auth';
 import app from '../firebaseconfig';
+import { Colors } from '../constants/Colors';
 import Toast from 'react-native-toast-message';
-import styles from '../styles/AuthStyles'; // 👈 Importing shared styles
+import styles from '../styles/AuthStyles';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { LinearGradient } from 'expo-linear-gradient';
-
+import { getAuth } from 'firebase/auth';
+import { auth, db, googleProvider } from '../firebaseconfig';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
 
 const LoginScreen = ({ navigation }: any) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isPasswordVisible, setPasswordVisible] = useState(false);
-  const auth = getAuth(app);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    // Check for redirect result on component mount (for web)
+    if (Platform.OS === 'web') {
+      checkRedirectResult();
+    }
+  }, []);
+
+  const checkRedirectResult = async () => {
+    try {
+      const result = await getRedirectResult(auth);
+      if (result) {
+        // User successfully signed in with redirect
+        handleGoogleUserData(result.user);
+      }
+    } catch (error: any) {
+      console.error("Redirect result error:", error);
+      Toast.show({
+        type: 'error',
+        text1: 'Sign In Failed',
+        text2: error.message || 'Something went wrong with Google sign-in.',
+      });
+    }
+  };
+
+  const handleGoogleUserData = async (user: any) => {
+    try {
+      // Check if user profile exists in Firestore
+      const userDocRef = doc(db, 'users', user.uid);
+      const userDoc = await getDoc(userDocRef);
+      
+      if (!userDoc.exists()) {
+        // Create a new user document if it doesn't exist
+        await setDoc(userDocRef, {
+          uid: user.uid,
+          email: user.email,
+          username: user.displayName || 'User',
+          createdAt: new Date(),
+        });
+        
+        // Create user preferences document
+        const prefDocRef = doc(db, 'user_preferences', user.uid);
+        await setDoc(prefDocRef, {
+          profilePic: user.photoURL || 'https://i.imgur.com/placeholder.png',
+          musicLangPref: ['English'],
+          musicTaste: ['Pop'],
+        });
+        
+        // Navigate to complete profile for new users
+        Toast.show({
+          type: 'success',
+          text1: 'Sign In Successful 🎉',
+          text2: 'Welcome! Please complete your profile.',
+        });
+        navigation.navigate('CompleteProfile', { uid: user.uid });
+      } else {
+        // Navigate to home for existing users
+        Toast.show({
+          type: 'success',
+          text1: 'Sign In Successful 🎉',
+          text2: 'Welcome back!',
+        });
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'Home' }],
+        });
+      }
+    } catch (error: any) {
+      console.error("Error handling Google user data:", error);
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Something went wrong. Please try again.',
+      });
+    }
+  };
+
   const handleLogin = async () => {
     if (!email.trim() || !password.trim()) {
       Toast.show({
@@ -23,6 +102,8 @@ const LoginScreen = ({ navigation }: any) => {
       });
       return;
     }
+    
+    setLoading(true);
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       Toast.show({
@@ -30,13 +111,21 @@ const LoginScreen = ({ navigation }: any) => {
         text1: 'Login Successful 🎉',
         text2: 'Welcome back!',
       });
-      // navigation.dispatch(
-      //   navigation.reset({
-      //     index: 0,
-      //     routes: [{ name: 'Home' }],
-      //   })
-      // )
-      navigation.navigate('CompleteProfile', { uid: userCredential.user.uid });
+      
+      // Check if user has completed profile
+      const userDocRef = doc(db, 'user_preferences', userCredential.user.uid);
+      const userDoc = await getDoc(userDocRef);
+      
+      if (userDoc.exists() && userDoc.data().musicTaste) {
+        // User has preferences, navigate to Home
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'Home' }],
+        });
+      } else {
+        // User needs to complete profile
+        navigation.navigate('CompleteProfile', { uid: userCredential.user.uid });
+      }
     } catch (error: any) {
       console.error(error);
       Toast.show({
@@ -44,11 +133,44 @@ const LoginScreen = ({ navigation }: any) => {
         text1: 'Login Failed',
         text2: 'Invalid credentials. Please try again.',
       });
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleGoogleLogin = async () => {
-    // Implement Google Sign-in logic if needed
+    setLoading(true);
+    try {
+      if (Platform.OS === 'web') {
+        // Use popup for desktop browsers and redirect for mobile browsers
+        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        
+        if (isMobile) {
+          await signInWithRedirect(auth, googleProvider);
+          // The result will be handled in useEffect with getRedirectResult
+        } else {
+          const result = await signInWithPopup(auth, googleProvider);
+          await handleGoogleUserData(result.user);
+        }
+      } else {
+        // For React Native mobile, we'll need to use Expo's AuthSession
+        // This is handled separately with expo-auth-session
+        Toast.show({
+          type: 'error',
+          text1: 'Not Implemented',
+          text2: 'Google Sign In for mobile app requires additional setup.',
+        });
+      }
+    } catch (error: any) {
+      console.error("Google sign in error:", error);
+      Toast.show({
+        type: 'error',
+        text1: 'Sign In Failed',
+        text2: error.message || 'Something went wrong with Google sign-in.',
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleRegister = () => {
@@ -61,13 +183,12 @@ const LoginScreen = ({ navigation }: any) => {
 
   return (
     <View style={styles.container}>
-      
       <Image 
-        source={require('../assets/images/logo.png')} // Replace with your logo
+        source={require('../assets/images/logo.png')} 
         style={styles.logo}
       />
 
-<Text style={styles.header}>Welcome Back 👋</Text>
+      <Text style={styles.header}>Welcome Back 👋</Text>
 
       <View style={styles.inputContainer}>
         <TextInput
@@ -104,15 +225,20 @@ const LoginScreen = ({ navigation }: any) => {
         <Text style={styles.forgetPassword}>Forget Password?</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
+      <TouchableOpacity 
+        style={styles.loginButton} 
+        onPress={handleLogin}
+        disabled={loading}
+      >
         <LinearGradient
-        // Adding gradient to the button with 4 shades
           colors={['#E100FF', '#2575fc', '#1C15ED', '#0544BA']}   
-          locations={[0, 0.4, 0.6, 0.7]} // Adjust the locations for gradient effect
-          start={{ x: 0, y: 1 }}  // Adjust the start and end points for gradient effect
-          end={{ x: 2, y: 3 }} // Adjust the start and end points for gradient effect
+          locations={[0, 0.4, 0.6, 0.7]}
+          start={{ x: 0, y: 1 }}
+          end={{ x: 2, y: 3 }}
           style={styles.loginButton}>
-          <Text style={styles.loginButtonText}>LOGIN</Text>
+          <Text style={styles.loginButtonText}>
+            {loading ? 'LOGGING IN...' : 'LOGIN'}
+          </Text>
         </LinearGradient>
       </TouchableOpacity>
 
@@ -122,13 +248,19 @@ const LoginScreen = ({ navigation }: any) => {
         <View style={styles.line} />
       </View>
 
-      <TouchableOpacity style={styles.googleButton} onPress={handleGoogleLogin}>
+      <TouchableOpacity 
+        style={styles.googleButton} 
+        onPress={handleGoogleLogin}
+        disabled={loading}
+      >
         <Image 
-          source={{ uri: 'https://img.icons8.com/color/48/000000/google-logo.png' }} // Replace with your Google logo
+          source={{ uri: 'https://img.icons8.com/color/48/000000/google-logo.png' }}
           resizeMode="contain"
           style={styles.googleLogo}
         />
-        <Text style={styles.googleButtonText}>Sign in with Google</Text>
+        <Text style={styles.googleButtonText}>
+          {loading ? 'Signing in...' : 'Sign in with Google'}
+        </Text>
       </TouchableOpacity>
 
       <TouchableOpacity onPress={handleRegister}>
