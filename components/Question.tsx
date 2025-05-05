@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, TouchableOpacity, Image, TextInput, Animated, TextStyle } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../constants/Colors';
-import styles from '../styles/PrefereneStyles';
+import styles from '../styles/PreferenceStyles';
 
 const Question = ({ title, type, options, selectedValues, onSelect, onPickImage }: any) => {
   const [focus, setFocus] = useState(false);
@@ -29,7 +29,7 @@ const Question = ({ title, type, options, selectedValues, onSelect, onPickImage 
     }),
     color: animatedLabel.interpolate({
       inputRange: [0, 1],
-      outputRange: ['#FFD93D', Colors.buttonBackground|| '#000'],
+      outputRange: [Colors.buttonBackground, '#E100FF'],
     }),
     zIndex: 1,
   };

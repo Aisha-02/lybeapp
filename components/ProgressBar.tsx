@@ -16,7 +16,7 @@ const ProgressBar: React.FC<ProgressBarProps> = ({ currentStep, totalSteps }) =>
       <View style={styles.backgroundBar}>
         {progress > 0 && (
           <LinearGradient
-            colors={['#FFD93D', '#F2547D']}
+            colors={['#E100FF', '#2575fc']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={[styles.progressBar, { width: `${progress}%` }]}

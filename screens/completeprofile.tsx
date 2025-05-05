@@ -16,7 +16,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import Question from '../components/Question';
 import ProgressBar from '../components/ProgressBar';
-import styles from '../styles/PrefereneStyles';
+import styles from '../styles/PreferenceStyles';
+import { Colors } from 'react-native/Libraries/NewAppScreen';
 
 const { width } = Dimensions.get('window');
 
@@ -136,7 +137,7 @@ const CompleteProfile = ({ route, navigation }: any) => {
   };
 
   return (
-    <LinearGradient colors={['#3A0CA3', '#480CA8', '#4361EE']} style={{ flex: 1 }}>
+    <LinearGradient colors={[ '#11002E', '#2a2a2a']} style={{ flex: 1 }}>
       <SafeAreaView style={{ flex: 1 }}>
         <ProgressBar currentStep={currentPage} totalSteps={pages.length} />
         <Animated.ScrollView
@@ -157,7 +158,7 @@ const CompleteProfile = ({ route, navigation }: any) => {
           {pages.map((Page, index) => (
             <Animated.View key={index} style={{ width, padding: 20, alignItems: 'center', justifyContent: 'center' }}>
               <Animated.View style={{
-                backgroundColor: '#F2547D',
+                backgroundColor: '#09011D',
                 borderRadius: 25,
                 padding: 20,
                 shadowColor: '#000',
@@ -180,7 +181,7 @@ const CompleteProfile = ({ route, navigation }: any) => {
 
         {currentPage < pages.length - 1 ? (
           <TouchableOpacity onPress={() => scrollToPage(currentPage + 1)} style={styles.navButton}>
-            <Ionicons name="arrow-forward-circle" size={32} color="#F8AC4B" />
+            <Ionicons name="arrow-forward-circle" size={32} color= {'#7F00FF'} />
           </TouchableOpacity>
         ) : (
           <TouchableOpacity onPress={handleSubmit} style={styles.nextButton}>
@@ -190,7 +191,7 @@ const CompleteProfile = ({ route, navigation }: any) => {
 
         {currentPage > 0 && (
           <TouchableOpacity onPress={() => scrollToPage(currentPage - 1)} style={styles.navBack}>
-            <Ionicons name="arrow-back-circle" size={32} color="#F8AC4B" />
+            <Ionicons name="arrow-back-circle" size={32} color= {'#7F00FF'} />
           </TouchableOpacity>
         )}
       </SafeAreaView>

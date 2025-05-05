@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import Layout from '../app/_layout';
-import { onAuthStateChanged } from 'firebase/auth';
+import { SafeAreaView } from 'react-native';
+import Toast from 'react-native-toast-message';
 import { auth } from '../firebaseconfig';
 import { View, ActivityIndicator } from 'react-native';
-import { User } from 'firebase/auth'; // Import User type from Firebase Auth
-
+import { User , onAuthStateChanged} from 'firebase/auth'; // Import User type from Firebase Auth
 //import { GoogleSignin } from '@react-native-google-signin/google-signin';
 
 // GoogleSignin.configure({
@@ -37,8 +37,13 @@ export default function App() {
   }
 
   return (
-    <NavigationContainer>
-      <Layout />
-    </NavigationContainer>
+    <>
+     <SafeAreaView>
+     <NavigationContainer>
+       <Layout />
+     </NavigationContainer>
+     <Toast/>
+     </SafeAreaView>
+     </>
   );
 }

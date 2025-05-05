@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, Image, Animated, StyleSheet, ScrollView, 
 import { getAuth, signOut } from 'firebase/auth';
 import { getFirestore, doc, getDoc } from 'firebase/firestore';
 import { Ionicons } from '@expo/vector-icons';
-import  styles from '../styles/PrefereneStyles';
+import styles from '../styles/PreferenceStyles'; // Ensure this file exists or update the path
 import app from '../firebaseconfig';
 import { useNavigation } from '@react-navigation/native';
 

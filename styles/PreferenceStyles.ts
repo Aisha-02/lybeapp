@@ -10,7 +10,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   title: {
-    fontSize: 28,
+    fontSize: 27,
     color: '#fff',
     fontWeight: 'bold',
     marginBottom: 10,
@@ -22,7 +22,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   chip: {
-    backgroundColor: '#F56C57',
+    backgroundColor: '#E100FF',
     borderRadius: 20,
     paddingVertical: 10,
     paddingHorizontal: 18,
@@ -33,7 +33,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   chipSelected: {
-    backgroundColor: '#F8AC4B',
+    backgroundColor: Colors.buttonBackground,
   },
   chipText: {
     color: '#fff',
@@ -69,7 +69,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: 20,
     bottom: 25,
-    backgroundColor: '#F8AC4B',
+    backgroundColor: Colors.buttonBackground,
     paddingVertical: 12,
     paddingHorizontal: 32,
     borderRadius: 30,
@@ -103,12 +103,11 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1,
-    borderColor: '#ccc',
     borderRadius: 10,
     padding: 10,
     color: '#000',
-    fontSize: 14,
-    backgroundColor: '#f9f9f9',
+    backgroundColor: Colors.inputBackground,
+    fontSize: 16,
   },
   uploadText: {
     color: '#fff',

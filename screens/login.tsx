@@ -4,18 +4,19 @@ import { signInWithEmailAndPassword, signInWithPopup, signInWithRedirect, getRed
 import app from '../firebaseconfig';
 import { Colors } from '../constants/Colors';
 import Toast from 'react-native-toast-message';
-import styles from '../styles/AuthStyles';
+import styles from '../styles/AuthStyles'; // 👈 Importing shared styles
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { getAuth } from 'firebase/auth';
 import { auth, db, googleProvider } from '../firebaseconfig';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { getAuth } from 'firebase/auth';
 
 const LoginScreen = ({ navigation }: any) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isPasswordVisible, setPasswordVisible] = useState(false);
   const [loading, setLoading] = useState(false);
+  const auth = getAuth(app);
 
   useEffect(() => {
     // Check for redirect result on component mount (for web)
@@ -46,7 +47,7 @@ const LoginScreen = ({ navigation }: any) => {
       // Check if user profile exists in Firestore
       const userDocRef = doc(db, 'users', user.uid);
       const userDoc = await getDoc(userDocRef);
-      
+
       if (!userDoc.exists()) {
         // Create a new user document if it doesn't exist
         await setDoc(userDocRef, {
@@ -55,15 +56,6 @@ const LoginScreen = ({ navigation }: any) => {
           username: user.displayName || 'User',
           createdAt: new Date(),
         });
-        
-        // Create user preferences document
-        const prefDocRef = doc(db, 'user_preferences', user.uid);
-        await setDoc(prefDocRef, {
-          profilePic: user.photoURL || 'https://i.imgur.com/placeholder.png',
-          musicLangPref: ['English'],
-          musicTaste: ['Pop'],
-        });
-        
         // Navigate to complete profile for new users
         Toast.show({
           type: 'success',
@@ -90,8 +82,10 @@ const LoginScreen = ({ navigation }: any) => {
         text1: 'Error',
         text2: 'Something went wrong. Please try again.',
       });
-    }
-  };
+    };
+
+  }
+
 
   const handleLogin = async () => {
     if (!email.trim() || !password.trim()) {
@@ -102,7 +96,6 @@ const LoginScreen = ({ navigation }: any) => {
       });
       return;
     }
-    
     setLoading(true);
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
@@ -111,21 +104,13 @@ const LoginScreen = ({ navigation }: any) => {
         text1: 'Login Successful 🎉',
         text2: 'Welcome back!',
       });
-      
-      // Check if user has completed profile
-      const userDocRef = doc(db, 'user_preferences', userCredential.user.uid);
-      const userDoc = await getDoc(userDocRef);
-      
-      if (userDoc.exists() && userDoc.data().musicTaste) {
-        // User has preferences, navigate to Home
-        navigation.reset({
-          index: 0,
-          routes: [{ name: 'Home' }],
-        });
-      } else {
-        // User needs to complete profile
-        navigation.navigate('CompleteProfile', { uid: userCredential.user.uid });
-      }
+      // navigation.dispatch(
+      //   navigation.reset({
+      //     index: 0,
+      //     routes: [{ name: 'Home' }],
+      //   })
+      // )
+      navigation.navigate('CompleteProfile', { uid: userCredential.user.uid });
     } catch (error: any) {
       console.error(error);
       Toast.show({
@@ -133,18 +118,16 @@ const LoginScreen = ({ navigation }: any) => {
         text1: 'Login Failed',
         text2: 'Invalid credentials. Please try again.',
       });
-    } finally {
-      setLoading(false);
     }
   };
 
   const handleGoogleLogin = async () => {
     setLoading(true);
     try {
-      if (Platform.OS === 'web') {
+       if (Platform.OS === 'web') {
         // Use popup for desktop browsers and redirect for mobile browsers
         const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-        
+
         if (isMobile) {
           await signInWithRedirect(auth, googleProvider);
           // The result will be handled in useEffect with getRedirectResult
@@ -183,8 +166,9 @@ const LoginScreen = ({ navigation }: any) => {
 
   return (
     <View style={styles.container}>
-      <Image 
-        source={require('../assets/images/logo.png')} 
+
+      <Image
+        source={require('../assets/images/logo.png')} // Replace with your logo
         style={styles.logo}
       />
 
@@ -225,20 +209,15 @@ const LoginScreen = ({ navigation }: any) => {
         <Text style={styles.forgetPassword}>Forget Password?</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity 
-        style={styles.loginButton} 
-        onPress={handleLogin}
-        disabled={loading}
-      >
+      <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
         <LinearGradient
-          colors={['#E100FF', '#2575fc', '#1C15ED', '#0544BA']}   
-          locations={[0, 0.4, 0.6, 0.7]}
-          start={{ x: 0, y: 1 }}
-          end={{ x: 2, y: 3 }}
+          // Adding gradient to the button with 4 shades
+          colors={['#E100FF', '#2575fc', '#1C15ED', '#0544BA']}
+          locations={[0, 0.4, 0.6, 0.7]} // Adjust the locations for gradient effect
+          start={{ x: 0, y: 1 }}  // Adjust the start and end points for gradient effect
+          end={{ x: 2, y: 3 }} // Adjust the start and end points for gradient effect
           style={styles.loginButton}>
-          <Text style={styles.loginButtonText}>
-            {loading ? 'LOGGING IN...' : 'LOGIN'}
-          </Text>
+          <Text style={styles.loginButtonText}>LOGIN</Text>
         </LinearGradient>
       </TouchableOpacity>
 
@@ -248,19 +227,13 @@ const LoginScreen = ({ navigation }: any) => {
         <View style={styles.line} />
       </View>
 
-      <TouchableOpacity 
-        style={styles.googleButton} 
-        onPress={handleGoogleLogin}
-        disabled={loading}
-      >
-        <Image 
-          source={{ uri: 'https://img.icons8.com/color/48/000000/google-logo.png' }}
+      <TouchableOpacity style={styles.googleButton} onPress={handleGoogleLogin}>
+        <Image
+          source={{ uri: 'https://img.icons8.com/color/48/000000/google-logo.png' }} // Replace with your Google logo
           resizeMode="contain"
           style={styles.googleLogo}
         />
-        <Text style={styles.googleButtonText}>
-          {loading ? 'Signing in...' : 'Sign in with Google'}
-        </Text>
+        <Text style={styles.googleButtonText}>Sign in with Google</Text>
       </TouchableOpacity>
 
       <TouchableOpacity onPress={handleRegister}>
