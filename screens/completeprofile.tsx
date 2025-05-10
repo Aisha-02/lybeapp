@@ -22,7 +22,7 @@ import { Colors } from 'react-native/Libraries/NewAppScreen';
 const { width } = Dimensions.get('window');
 
 const vibeOptions = ['Chill AF 🤘', 'Party Animal 🥳', 'Hopeless Romantic 🔥', 'Filmy & Dramatic 🎬', 'Meme Lord 😂', 'Rizzy 😍'];
-const musicOptions = ['Bollywood', 'Indie', 'Hip-Hop/Rap', 'Lo-Fi', 'Pop', 'Rock', 'Sufi', 'Classical'];
+const musicOptions = ['Bollywood', 'Indie', 'Hip-Hop', 'Lo-Fi', 'Pop', 'Rock', 'Sufi', 'Classical'];
 const connectionVibes = ['Deep conversations', 'Fun and Flirty', 'Just vibing with music', 'Travel buddy', 'Serious relationship', 'Chill friendships'];
 const musicLanguages = ['Hindi', 'English', 'Punjabi', 'Tamil', 'Telugu', 'Marathi', 'Bengali', 'Other'];
 const openToDifferentTaste = ['Hell yes!', 'Maybe, if we vibe otherwise', 'Nah, music taste is everything'];
