@@ -1,108 +1,174 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Image, ScrollView, TouchableOpacity, FlatList } from 'react-native';
+import {
+  View, Text, Image, ScrollView, TouchableOpacity, FlatList, ActivityIndicator, Alert
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { getFirestore, doc, getDoc } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 import app from '../../firebaseconfig';
 import { useNavigation } from '@react-navigation/native';
 import MenuScreen from '../../screens/userMenu';
-import styles from '../../styles/HomeStyles';  // Import styles
+import styles from '../../styles/HomeStyles';
 
 const Home = () => {
   const [userName, setUserName] = useState('');
   const [profilePic, setProfilePic] = useState('');
   const [showMenu, setShowMenu] = useState(false);
-  const [musicLanguages, setMusicLanguages] = useState<string[]>([]);
-  const [musicOptions, setMusicOptions] = useState<string[]>([]);
+  const [musicArtists, setmusicArtists] = useState<string[]>([]);
   const [songs, setSongs] = useState<any[]>([]);
   const [artists, setArtists] = useState<any[]>([]);
+  const [loadingSongs, setLoadingSongs] = useState(true);
+  const [loadingArtists, setLoadingArtists] = useState(true);
 
   const db = getFirestore(app);
   const auth = getAuth(app);
   const navigation = useNavigation<any>();
 
   useEffect(() => {
+    let isMounted = true;
+
     const fetchUserData = async () => {
-      const user = auth.currentUser;
-      if (user) {
-        const userDoc = await getDoc(doc(db, 'users', user.uid));
-        const prefDoc = await getDoc(doc(db, 'user_preferences', user.uid));
+      try {
+        const user = auth.currentUser;
+        if (user) {
+          const userDoc = await getDoc(doc(db, 'users', user.uid));
+          const prefDoc = await getDoc(doc(db, 'user_preferences', user.uid));
 
-        if (userDoc.exists()) {
-          const userData = userDoc.data();
-          setUserName(userData.username || 'User');
-        }
+          if (isMounted) {
+            if (userDoc.exists()) {
+              const userData = userDoc.data();
+              setUserName(userData.username || 'User');
+            }
 
-        if (prefDoc.exists()) {
-          const prefData = prefDoc.data();
-          setProfilePic(prefData.profilePic || 'https://i.imgur.com/placeholder.png');
-          setMusicLanguages(prefData.musicLangPref || ['English']);
-          setMusicOptions(prefData.musicTaste || ['Pop']);
+            if (prefDoc.exists()) {
+              const prefData = prefDoc.data();
+              setProfilePic(
+                prefData.profilePic || 'https://via.placeholder.com/150'
+              );
+              setmusicArtists(prefData.favSingers || []);
+            }
+          }
         }
+      } catch (err) {
+        console.error('Error fetching user data:', err);
+        Alert.alert('Oops!', 'Failed to load user data.');
       }
     };
 
     fetchUserData();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   useEffect(() => {
     const fetchContent = async () => {
+      setLoadingSongs(true);
+      setLoadingArtists(true);
       try {
-        const genreParams = musicOptions.join(',');
-
-        const songsRes = await fetch(`http://IP ADDRESS:3000/api/spotify/recommendations?genres=${genreParams}`);
-        const artistRes = await fetch(`http://IP ADDRESS:3000/api/spotify/artists?genres=${genreParams}`);
-
+        const artistParams = musicArtists.join(',');
+      
+        const [songsRes, artistRes] = await Promise.all([
+          fetch(`http://192.168.1.81:3000/api/spotify/recommendations?artists=${artistParams}`),
+          fetch(`http://192.168.1.81:3000/api/spotify/artists?artists=${artistParams}`)
+        ]);
+      
         const songsData = await songsRes.json();
         const artistsData = await artistRes.json();
+      
+        setSongs((songsData?.tracks || []).filter((item: any) => item && (item.track?.id || item.id)));
+      
+        const artistsArray = Array(artistsData);
+    
+          console.log('Artists:', artistsArray);
 
-        setSongs(songsData || []);
-        setArtists(artistsData || []);
+          setArtists(artistsArray.filter((item: any) => item && item.id));
+          
       } catch (error) {
         console.error('Error fetching personalized music:', error);
+        Alert.alert('Oops!', 'Failed to fetch music data.');
+      } finally {
+        setLoadingSongs(false);
+        setLoadingArtists(false);
       }
+      
     };
 
-    if (musicLanguages.length || musicOptions.length) {
+    if (musicArtists.length > 0) {
       fetchContent();
     }
-  }, [musicLanguages, musicOptions]);
+  }, [musicArtists]);
 
   const handleArtistPress = async (artistId: string) => {
     try {
-      const res = await fetch(`http://localhost:3000/api/spotify/artist-tracks/${artistId}`);
+      setLoadingSongs(true);
+      const res = await fetch(`http://192.168.1.81:3000/api/spotify/artist-tracks/${artistId}`);
       const data = await res.json();
-      setSongs(data.songs || []);
+      const cleanSongs = (data?.songs || []).filter((song: any) => song && (song.track?.id || song.id));
+      setSongs(cleanSongs);
     } catch (error) {
       console.error('Error fetching songs for artist:', error);
+      Alert.alert('Error', 'Unable to fetch artist songs.');
+    } finally {
+      setLoadingSongs(false);
     }
   };
 
-  const renderSongItem = ({ item }: any) => (
-    <View style={styles.songCard}>
-      <Image source={{ uri: item.track.album.images[0].url }} style={styles.songImage} />
-      <Text style={styles.songText} numberOfLines={1}>{item.track.name}</Text>
-      <Text style={styles.songText} numberOfLines={1}>{item.artist}</Text>
-    </View>
-  );
-  
-  const renderArtistItem = ({ item }: any) => {
-    const artistImage = item.images && item.images[0]?.url;
-  
+  const renderSongItem = ({ item, index }: any) => {
+    const song = item.track || item;
+    if (!song?.album?.images?.[0]) return null;
+
     return (
-      <View style={styles.artistCard}>
-        {artistImage ? (
-          <Image source={{ uri: artistImage }} style={styles.artistImage} />
-        ) : (
-          <Text style={styles.artistText}>No image</Text>
-        )}
-        <Text style={styles.artistText} numberOfLines={2}>
-          {item.name}
+      <View key={`${song.id}-${index}`} style={styles.songCard}>
+        <Image source={{ uri: song.album.images[0].url }} style={styles.songImage} />
+        <Text style={styles.songText} numberOfLines={1}>{song.name}</Text>
+        <Text style={styles.songText} numberOfLines={1}>
+          {song.artists?.[0]?.name || 'Unknown Artist'}
         </Text>
       </View>
     );
   };
-  
+
+  const renderArtistItem = ({ item }: any) => {
+    console.log('Rendering artist:', item);
+    const artistImage = item.images?.[0]?.url;
+
+    return (
+      <TouchableOpacity
+        onPress={() => handleArtistPress(item.id)}
+        style={{ marginHorizontal: 5 }}
+      >
+        <View
+          style={[
+            styles.artistCard,
+            {
+              borderWidth: 1,
+              borderColor: 'yellow',
+              padding: 5,
+              width: 100,
+              height: 130,
+              alignItems: 'center',
+              justifyContent: 'center',
+            },
+          ]}
+        >
+          {artistImage ? (
+            <Image
+              source={{ uri: artistImage }}
+              style={[styles.artistImage, { width: 80, height: 80, borderRadius: 40 }]}
+              resizeMode="cover"
+            />
+          ) : (
+            <Text style={[styles.artistText, { color: 'white' }]}>No image</Text>
+          )}
+          <Text style={[styles.artistText, { color: 'white', marginTop: 5 }]} numberOfLines={2}>
+            {item.name}
+          </Text>
+        </View>
+      </TouchableOpacity>
+    );
+  };
 
   return (
     <View style={styles.container}>
@@ -117,17 +183,23 @@ const Home = () => {
             <Ionicons name="chatbubble-ellipses-outline" size={28} color="#fff" />
           </TouchableOpacity>
 
-          <TouchableOpacity onPress={() => setShowMenu(prev => !prev)} style={styles.menuIcon}>
+          <TouchableOpacity
+            onPress={() => setShowMenu(prev => !prev)}
+            style={styles.menuIcon}
+            accessible accessibilityLabel="Open Menu"
+          >
             <Ionicons name="menu" size={30} color="white" />
           </TouchableOpacity>
         </View>
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>🎧 Made For You</Text>
-          {songs.length > 0 ? (
+          {loadingSongs ? (
+            <ActivityIndicator size="small" color="#fff" />
+          ) : songs.length > 0 ? (
             <FlatList
               data={songs}
-              keyExtractor={(item, index) => item.track.id || index.toString()}
+              keyExtractor={(item, index) => `${item?.track?.id || item?.id}-${index}`}
               renderItem={renderSongItem}
               horizontal
               showsHorizontalScrollIndicator={false}
@@ -139,16 +211,24 @@ const Home = () => {
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>🎤 Artists You May Like</Text>
-          <FlatList
-            data={artists}
-            keyExtractor={(item) => item.id.toString()}
-            renderItem={renderArtistItem}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-          />
+          {loadingArtists ? (
+            <ActivityIndicator size="small" color="#fff" />
+          ) : artists.length > 0 ? (
+            <>
+              <FlatList
+                data={artists}
+                keyExtractor={(item, index) => `${item?.id || 'artist'}-${index}`}
+                renderItem={renderArtistItem}
+                horizontal
+                showsHorizontalScrollIndicator={false}
+              />
+              <Text style={{ color: 'white', marginVertical: 5 }}>Artists count: {artists.length}</Text>
+            </>
+          ) : (
+            <Text style={styles.noDataText}>No artists found</Text>
+          )}
         </View>
       </ScrollView>
-
       {showMenu && <MenuScreen onClose={() => setShowMenu(false)} />}
     </View>
   );

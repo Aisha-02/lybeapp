@@ -104,13 +104,13 @@ const LoginScreen = ({ navigation }: any) => {
         text1: 'Login Successful 🎉',
         text2: 'Welcome back!',
       });
-      // navigation.dispatch(
-      //   navigation.reset({
-      //     index: 0,
-      //     routes: [{ name: 'Home' }],
-      //   })
-      // )
-      navigation.navigate('CompleteProfile', { uid: userCredential.user.uid });
+      navigation.dispatch(
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'Home' }],
+        })
+      )
+      // navigation.navigate('CompleteProfile', { uid: userCredential.user.uid });
     } catch (error: any) {
       console.error(error);
       Toast.show({

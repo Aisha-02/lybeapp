@@ -46,7 +46,7 @@ const styles = StyleSheet.create({
   },
   navButton: {
     position: 'absolute',
-    bottom : 20,
+    bottom : 10,
     right: 20,
     borderRadius: 0,
     alignItems: 'center',
@@ -57,7 +57,7 @@ const styles = StyleSheet.create({
   navBack: {
   position: 'absolute',
   left: 20,
-  bottom: 25,
+  bottom: 10,
   backgroundColor: 'transparent', // or any color you want
   borderRadius: 30,
   alignItems: 'center',
@@ -68,7 +68,7 @@ const styles = StyleSheet.create({
   nextButton: {
     position: 'absolute',
     right: 20,
-    bottom: 25,
+    bottom: 10,
     backgroundColor: Colors.buttonBackground,
     paddingVertical: 12,
     paddingHorizontal: 32,
