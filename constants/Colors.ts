@@ -16,5 +16,4 @@ export const Colors = {
   chipUnselected: '#222326',    // Unselected chip background
   chipTextUnselected: '#888888',// Unselected chip text
   border: '#222326',            // Used for chip/field borders if needed
-
-};
+}

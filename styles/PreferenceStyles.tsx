@@ -115,6 +115,14 @@ const styles = StyleSheet.create({
     marginTop: 15,
     textAlign: 'center',
   },
+  // New error text style that matches your design language
+  errorText: {
+    color: '#FF3B30', // Standard error red
+    fontSize: 14,
+    marginTop: 6,
+    marginLeft: 10,
+    fontWeight: '500',
+  },
 
   /** ------------ MENU SCREEN RELATED ------------- */
 

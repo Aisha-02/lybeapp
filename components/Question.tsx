@@ -1,11 +1,14 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, TouchableOpacity, Image, TextInput, Animated, TextStyle } from 'react-native';
+import { View, Text, TouchableOpacity, Image, TextInput, Animated, TextStyle, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../constants/Colors';
 import styles from '../styles/PreferenceStyles';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 const Question = ({ title, type, options, selectedValues, onSelect, onPickImage }: any) => {
   const [focus, setFocus] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [dateError, setDateError] = useState('');
   const animatedLabel = useRef(new Animated.Value(selectedValues ? 1 : 0)).current;
 
   useEffect(() => {
@@ -34,11 +37,49 @@ const Question = ({ title, type, options, selectedValues, onSelect, onPickImage 
     zIndex: 1,
   };
 
+  const validateBirthday = (date: Date) => {
+    // Calculate age
+    const today = new Date();
+    const birthDate = new Date(date);
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+
+    // Validate age (13+ is a common requirement for social apps)
+    if (age < 13) {
+      setDateError('You must be at least 13 years old');
+      return false;
+    } else if (age > 120) {
+      setDateError('Please enter a valid birth date');
+      return false;
+    } else {
+      setDateError('');
+      return true;
+    }
+  };
+
+  const handleDateChange = (event: any, selectedDate?: Date) => {
+    setShowDatePicker(false);
+
+    if (selectedDate) {
+      if (validateBirthday(selectedDate)) {
+        onSelect(selectedDate);
+      } else {
+        // If invalid, you might want to keep the old value or set to null
+        // Here we're keeping the old value
+        Alert.alert("Invalid Date", dateError);
+      }
+    }
+  };
+
   const renderTextInputWithFloatingLabel = () => (
     <View style={{ position: 'relative', paddingTop: 24 }}>
       <Animated.Text style={labelStyle}>{title}</Animated.Text>
       <TextInput
-        style={styles.input}
+        style={[styles.input, { color: Colors.text }]}
         value={selectedValues}
         onFocus={() => setFocus(true)}
         onBlur={() => setFocus(false)}
@@ -46,6 +87,37 @@ const Question = ({ title, type, options, selectedValues, onSelect, onPickImage 
         placeholder=""
         placeholderTextColor="#999"
       />
+    </View>
+  );
+
+  const renderDateInputWithFloatingLabel = () => (
+    <View style={{ position: 'relative', paddingTop: 24 }}>
+      <Animated.Text style={labelStyle}>{title}</Animated.Text>
+      <TouchableOpacity
+        style={[styles.input, { justifyContent: 'center' }]}
+        onPress={() => {
+          setFocus(true);
+          setShowDatePicker(true);
+        }}
+        onBlur={() => setFocus(false)}
+      >
+        <Text style={{ color: selectedValues ? Colors.text : Colors.subText }}>
+          {selectedValues ? selectedValues.toDateString() : ''}
+        </Text>
+      </TouchableOpacity>
+      
+      {dateError ? <Text style={styles.errorText}>{dateError}</Text> : null}
+      
+      {showDatePicker && (
+        <DateTimePicker
+          value={selectedValues || new Date()}
+          mode="date"
+          display="default"
+          onChange={handleDateChange}
+          maximumDate={new Date()}
+          minimumDate={new Date(1900, 0, 1)}
+        />
+      )}
     </View>
   );
 
@@ -100,12 +172,12 @@ const Question = ({ title, type, options, selectedValues, onSelect, onPickImage 
 
     return (
       <TextInput
-        style={styles.input}
+        style={[styles.input, { color: Colors.text }]}
         value={selectedValues}
         onFocus={() => setFocus(true)}
         onBlur={() => setFocus(false)}
         onChangeText={onSelect}
-        placeholder={type === 'date' ? 'Select a date' : ''}
+        placeholder=""
         placeholderTextColor="#999"
       />
     );
@@ -113,8 +185,10 @@ const Question = ({ title, type, options, selectedValues, onSelect, onPickImage 
 
   return (
     <View style={{ marginBottom: 24 }}>
-      {type === 'text' || type === 'date'
+      {type === 'text'
         ? renderTextInputWithFloatingLabel()
+        : type === 'date'
+        ? renderDateInputWithFloatingLabel()
         : (
           <>
             <Text style={styles.title}>{title}</Text>

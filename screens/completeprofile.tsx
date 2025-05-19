@@ -7,6 +7,8 @@ import {
   View,
   SafeAreaView,
   Dimensions,
+  NativeSyntheticEvent,
+  NativeScrollEvent
 } from 'react-native';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { doc, setDoc, getFirestore } from 'firebase/firestore';
@@ -36,12 +38,22 @@ const singerSuggestions = {
   Bengali: ['Arijit Singh', 'Rupam Islam', 'Anupam Roy', 'Shreya Ghoshal'],
 };
 
-const CompleteProfile = ({ route, navigation }: any) => {
+interface CompleteProfileProps {
+  route: {
+    params?: {
+      uid: string;
+    };
+  };
+  navigation: any;
+}
+
+const CompleteProfile = ({ route, navigation }: CompleteProfileProps) => {
   const userId = route.params?.uid;
   const db = getFirestore();
   const storage = getStorage();
 
   const [currentPage, setCurrentPage] = useState(0);
+  const [furthestCompletedPage, setFurthestCompletedPage] = useState(-1);
   const scrollX = useRef(new Animated.Value(0)).current;
   const scrollRef = useRef<ScrollView>(null);
 
@@ -60,6 +72,14 @@ const CompleteProfile = ({ route, navigation }: any) => {
 
   const [availableSingers, setAvailableSingers] = useState<string[]>([]);
 
+  // Update furthestCompletedPage whenever a page is completed
+  useEffect(() => {
+    if (isPageComplete(currentPage) && currentPage > furthestCompletedPage) {
+      setFurthestCompletedPage(currentPage);
+    }
+  }, [currentPage, bio, profilePic, birthday, pronouns, vibe, musicTaste, idealConnection, 
+      musicLangPref, openToDifferentMusic, relationshipStatus, favSingers]);
+
   useEffect(() => {
     // Calculate available singers based on selected music languages
     const langList = musicLangPref.map(lang => (lang === 'Other' ? 'Hindi' : lang)) as (keyof typeof singerSuggestions)[];
@@ -77,9 +97,7 @@ const CompleteProfile = ({ route, navigation }: any) => {
   }, [musicLangPref]);
 
   // Handles both single and multi select toggle
-  // For single select (string), just call setter(item)
-  // For multi-select (array), toggle in/out of array
-  const toggleSelection = (item: string, list: string[], setter: Function) => {
+  const toggleSelection = (item: string, list: string[], setter: React.Dispatch<React.SetStateAction<string[]>>) => {
     if (list.includes(item)) {
       setter(list.filter(i => i !== item));
     } else {
@@ -111,6 +129,18 @@ const CompleteProfile = ({ route, navigation }: any) => {
     }
   };
 
+  const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const offsetX = event.nativeEvent.contentOffset.x;
+    const pageWidth = event.nativeEvent.layoutMeasurement.width;
+    const currentPageIndex = Math.floor(offsetX / pageWidth);
+    const progress = (offsetX % pageWidth) / pageWidth;
+    
+    // If trying to scroll forward beyond completed pages, snap back
+    if (currentPageIndex === currentPage && progress > 0 && !isPageComplete(currentPage)) {
+      scrollRef.current?.scrollTo({ x: currentPage * pageWidth, animated: true });
+    }
+  };
+
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -124,6 +154,12 @@ const CompleteProfile = ({ route, navigation }: any) => {
   };
 
   const handleSubmit = async () => {
+    // Check if userId exists
+    if (!userId) {
+      console.error('User ID is undefined');
+      return; // Exit the function early
+    }
+
     try {
       let photoURL = '';
       if (profilePic) {
@@ -162,7 +198,7 @@ const CompleteProfile = ({ route, navigation }: any) => {
         <Question title="'Upload your vibe pic 📸'" type="image" selectedValues={profilePic} onPickImage={pickImage} />
         <Question title="Write a short and fun bio ✍️" type="text" selectedValues={bio} onSelect={setBio} />
         <Question title="Your current vibe is... 🎯" type="text" selectedValues={currentVibe} onSelect={setCurrentVibe} />
-        <Question title="When’s your birthday? 🎂" type="date" selectedValues={birthday} onSelect={setBirthday} />
+        <Question title="When's your birthday? 🎂" type="date" selectedValues={birthday} onSelect={setBirthday} />
         <Question title="Your pronouns are... 🏳️‍🌈" type="text" selectedValues={pronouns} onSelect={setPronouns} />
       </View>
     ),
@@ -229,12 +265,19 @@ const CompleteProfile = ({ route, navigation }: any) => {
           horizontal
           pagingEnabled
           showsHorizontalScrollIndicator={false}
-          onMomentumScrollEnd={e => {
+          onScroll={Animated.event(
+            [{ nativeEvent: { contentOffset: { x: scrollX } } }],
+            { useNativeDriver: false, listener: handleScroll }
+          )}
+          onMomentumScrollEnd={(e: NativeSyntheticEvent<NativeScrollEvent>) => {
             const page = Math.round(e.nativeEvent.contentOffset.x / e.nativeEvent.layoutMeasurement.width);
-            setCurrentPage(page);
+            if (page > currentPage && !isPageComplete(currentPage)) {
+              scrollRef.current?.scrollTo({ x: currentPage * width, animated: true });
+            } else {
+              setCurrentPage(page);
+            }
           }}
           scrollEventThrottle={16}
-          onScroll={Animated.event([{ nativeEvent: { contentOffset: { x: scrollX } } }], { useNativeDriver: false })}
         >
           {pages.map((Page, index) => (
             <Animated.View
