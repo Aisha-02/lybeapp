@@ -19,8 +19,21 @@ const RegisterScreen = ({ navigation }: any) => {
   const [isPasswordVisible, setPasswordVisible] = useState(false);
   const [isPasswordVisibleconfirm, setPasswordVisibleconfirm] = useState(false);
   const auth = getAuth(app);
+  
   const isEmailValid = (email: string) =>
     /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    
+  // Phone validation function - accepts common formats
+  const isPhoneValid = (phone: string) => {
+    // This regex allows for various phone formats:
+    // - 10 digits: 1234567890
+    // - With spaces: 123 456 7890
+    // - With dashes: 123-456-7890
+    // - With parentheses: (123) 456-7890
+    // - With country code: +91 1234567890
+    const phoneRegex = /^(\+\d{1,3}\s?)?((\(\d{1,3}\))|\d{1,3})[-.\s]?\d{3,4}[-.\s]?\d{4}$/;
+    return phoneRegex.test(phone);
+  };
 
   const handleRegister = async () => {
     if (!userId || !username || !email || !phone || !password || !confirmPassword) {
@@ -30,6 +43,11 @@ const RegisterScreen = ({ navigation }: any) => {
 
     if (!isEmailValid(email)) {
       Toast.show({ type: 'error', text1: 'Invalid Email', text2: 'Please enter a valid email address.' });
+      return;
+    }
+    
+    if (!isPhoneValid(phone)) {
+      Toast.show({ type: 'error', text1: 'Invalid Phone Number', text2: 'Please enter a valid phone number.' });
       return;
     }
 
