@@ -42,9 +42,7 @@ const Home = () => {
 
             if (prefDoc.exists()) {
               const prefData = prefDoc.data();
-              setProfilePic(
-                prefData.profilePic || 'https://via.placeholder.com/150'
-              );
+              setProfilePic(prefData.profilePic || 'https://via.placeholder.com/150');
               setmusicArtists(prefData.favSingers || []);
             }
           }
@@ -68,23 +66,29 @@ const Home = () => {
       setLoadingArtists(true);
       try {
         const artistParams = musicArtists.join(',');
-      
+
         const [songsRes, artistRes] = await Promise.all([
           fetch(`http://192.168.1.81:3000/api/spotify/recommendations?artists=${artistParams}`),
           fetch(`http://192.168.1.81:3000/api/spotify/artists?artists=${artistParams}`)
         ]);
-      
+
         const songsData = await songsRes.json();
         const artistsData = await artistRes.json();
-      
-        setSongs((songsData?.tracks || []).filter((item: any) => item && (item.track?.id || item.id)));
-      
-        const artistsArray = Array(artistsData);
-    
-          console.log('Artists:', artistsArray);
 
-          setArtists(artistsArray.filter((item: any) => item && item.id));
-          
+        setSongs((songsData?.tracks || []).filter((item: any) => item && (item.track?.id || item.id)));
+
+        let similarArtists: any[] = [];
+
+        if (Array.isArray(artistsData)) {
+          similarArtists = artistsData.flatMap((artist: any) => artist.similar || []);
+        } else if (artistsData?.similar) {
+          similarArtists = artistsData.similar;
+        }
+
+        const filteredArtists = similarArtists.filter((artist: any) =>
+          artist && artist.id && artist.images?.[0]?.url
+        );
+        setArtists(filteredArtists);
       } catch (error) {
         console.error('Error fetching personalized music:', error);
         Alert.alert('Oops!', 'Failed to fetch music data.');
@@ -92,7 +96,6 @@ const Home = () => {
         setLoadingSongs(false);
         setLoadingArtists(false);
       }
-      
     };
 
     if (musicArtists.length > 0) {
@@ -120,49 +123,33 @@ const Home = () => {
     if (!song?.album?.images?.[0]) return null;
 
     return (
-      <View key={`${song.id}-${index}`} style={styles.songCard}>
+      <TouchableOpacity key={`${song.id}-${index}`} style={styles.songCard}
+        onPress={() => navigation.navigate('TrackDetails', { track: song })}>
         <Image source={{ uri: song.album.images[0].url }} style={styles.songImage} />
         <Text style={styles.songText} numberOfLines={1}>{song.name}</Text>
         <Text style={styles.songText} numberOfLines={1}>
           {song.artists?.[0]?.name || 'Unknown Artist'}
         </Text>
-      </View>
+      </TouchableOpacity>
     );
   };
 
   const renderArtistItem = ({ item }: any) => {
-    console.log('Rendering artist:', item);
     const artistImage = item.images?.[0]?.url;
+    if (!artistImage) return null;
 
     return (
       <TouchableOpacity
         onPress={() => handleArtistPress(item.id)}
-        style={{ marginHorizontal: 5 }}
+        style={artistCardWrapper}
       >
-        <View
-          style={[
-            styles.artistCard,
-            {
-              borderWidth: 1,
-              borderColor: 'yellow',
-              padding: 5,
-              width: 100,
-              height: 130,
-              alignItems: 'center',
-              justifyContent: 'center',
-            },
-          ]}
-        >
-          {artistImage ? (
-            <Image
-              source={{ uri: artistImage }}
-              style={[styles.artistImage, { width: 80, height: 80, borderRadius: 40 }]}
-              resizeMode="cover"
-            />
-          ) : (
-            <Text style={[styles.artistText, { color: 'white' }]}>No image</Text>
-          )}
-          <Text style={[styles.artistText, { color: 'white', marginTop: 5 }]} numberOfLines={2}>
+        <View style={artistCard}>
+          <Image
+            source={{ uri: artistImage }}
+            style={artistImageStyle}
+            resizeMode="cover"
+          />
+          <Text style={artistNameText} numberOfLines={2}>
             {item.name}
           </Text>
         </View>
@@ -214,24 +201,53 @@ const Home = () => {
           {loadingArtists ? (
             <ActivityIndicator size="small" color="#fff" />
           ) : artists.length > 0 ? (
-            <>
-              <FlatList
-                data={artists}
-                keyExtractor={(item, index) => `${item?.id || 'artist'}-${index}`}
-                renderItem={renderArtistItem}
-                horizontal
-                showsHorizontalScrollIndicator={false}
-              />
-              <Text style={{ color: 'white', marginVertical: 5 }}>Artists count: {artists.length}</Text>
-            </>
+            <FlatList
+              data={artists}
+              keyExtractor={(item, index) => `${item?.id}-${index}`}
+              renderItem={renderArtistItem}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+            />
           ) : (
             <Text style={styles.noDataText}>No artists found</Text>
           )}
         </View>
       </ScrollView>
+
       {showMenu && <MenuScreen onClose={() => setShowMenu(false)} />}
     </View>
   );
+};
+
+const artistCardWrapper = {
+  marginHorizontal: 6,
+};
+
+const artistCard = {
+  backgroundColor: '#1c1c1e',
+  padding: 8,
+  borderRadius: 12,
+  alignItems: 'center' as const,
+  justifyContent: 'center' as const,
+  width: 100,
+  height: 140,
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: 2 },
+  shadowOpacity: 0.3,
+  shadowRadius: 3,
+  elevation: 4,
+};
+
+const artistImageStyle = {
+  width: 80,
+  height: 80,
+  borderRadius: 40,
+};
+
+const artistNameText = {
+  color: '#fff',
+  marginTop: 6,
+  fontSize: 12,
 };
 
 export default Home;

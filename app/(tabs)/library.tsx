@@ -1,7 +1,7 @@
 import { Text, View } from 'react-native'
 import React, { Component } from 'react'
 
-export default class library extends Component {
+export default class Library extends Component {
   render() {
     return (
       <View>
