@@ -1,15 +1,24 @@
 import React, { useState, useEffect } from 'react';
-import { View, TextInput, Text, TouchableOpacity, Image, Platform } from 'react-native';
+import { 
+  View, 
+  TextInput, 
+  Text, 
+  TouchableOpacity, 
+  Image, 
+  Platform,
+  SafeAreaView
+} from 'react-native';
 import { signInWithEmailAndPassword, signInWithPopup, signInWithRedirect, getRedirectResult } from 'firebase/auth';
 import app from '../firebaseconfig';
 import { Colors } from '../constants/Colors';
 import Toast from 'react-native-toast-message';
-import styles from '../styles/AuthStyles'; // 👈 Importing shared styles
+import styles from '../styles/AuthStyles';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { auth, db, googleProvider } from '../firebaseconfig';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
 const LoginScreen = ({ navigation }: any) => {
   const [email, setEmail] = useState('');
@@ -82,10 +91,8 @@ const LoginScreen = ({ navigation }: any) => {
         text1: 'Error',
         text2: 'Something went wrong. Please try again.',
       });
-    };
-
-  }
-
+    }
+  };
 
   const handleLogin = async () => {
     if (!email.trim() || !password.trim()) {
@@ -109,8 +116,7 @@ const LoginScreen = ({ navigation }: any) => {
           index: 0,
           routes: [{ name: 'Home' }],
         })
-      )
-      // navigation.navigate('CompleteProfile', { uid: userCredential.user.uid });
+      );
     } catch (error: any) {
       console.error(error);
       Toast.show({
@@ -118,13 +124,15 @@ const LoginScreen = ({ navigation }: any) => {
         text1: 'Login Failed',
         text2: 'Invalid credentials. Please try again.',
       });
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleGoogleLogin = async () => {
     setLoading(true);
     try {
-       if (Platform.OS === 'web') {
+      if (Platform.OS === 'web') {
         // Use popup for desktop browsers and redirect for mobile browsers
         const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
@@ -165,85 +173,96 @@ const LoginScreen = ({ navigation }: any) => {
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={{ flex: 1 }}>
+      <KeyboardAwareScrollView
+        contentContainerStyle={{ flexGrow: 1 }}
+        keyboardShouldPersistTaps="handled"
+        enableOnAndroid={true}
+        enableResetScrollToCoords={false}
+        extraScrollHeight={20}
+        extraHeight={Platform.OS === 'ios' ? 120 : 0}
+        resetScrollToCoords={{ x: 0, y: 0 }}
+      >
+        <View style={styles.container}>
+          <Image
+            source={require('../assets/images/logo.png')}
+            style={styles.logo}
+          />
 
-      <Image
-        source={require('../assets/images/logo.png')} // Replace with your logo
-        style={styles.logo}
-      />
+          <Text style={styles.header}>Welcome Back 👋</Text>
 
-      <Text style={styles.header}>Welcome Back 👋</Text>
+          <View style={styles.inputContainer}>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter Email"
+              placeholderTextColor="#888"
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+            />
+            <Ionicons name="mail-outline" size={25} color="#888" style={styles.inputIcon} />
+          </View>
 
-      <View style={styles.inputContainer}>
-        <TextInput
-          style={styles.input}
-          placeholder="Enter Email"
-          placeholderTextColor="#888"
-          value={email}
-          onChangeText={setEmail}
-          keyboardType="email-address"
-        />
-        <Ionicons name="mail-outline" size={25} color="#888" style={styles.inputIcon} />
-      </View>
+          <View style={styles.inputContainer}>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter Password"
+              placeholderTextColor="#888"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry={!isPasswordVisible}
+              autoCapitalize="none"
+            />
+            <Ionicons name="lock-closed-outline" size={24} color="#888" style={styles.inputIcon} />
+            <Ionicons
+              name={!isPasswordVisible ? 'eye-off-outline' : 'eye-outline'}
+              size={24}
+              color="#888"
+              style={[styles.inputIcon, { right: 16, left: 'auto', position: 'absolute' }]}
+              onPress={() => setPasswordVisible(prev => !prev)}
+            />
+          </View>
 
-      <View style={styles.inputContainer}>
-        <TextInput
-          style={styles.input}
-          placeholder="Enter Password"
-          placeholderTextColor="#888"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry={!isPasswordVisible}
-        />
-        <Ionicons name="lock-closed-outline" size={24} color="#888" style={styles.inputIcon} />
-        <Ionicons
-          name={!isPasswordVisible ? 'eye-off-outline' : 'eye-outline'}
-          size={24}
-          color="#888"
-          style={[styles.inputIcon, { right: 16, left: 'auto', position: 'absolute' }]}
-          onPress={() => setPasswordVisible(prev => !prev)}
-        />
-      </View>
+          <TouchableOpacity onPress={handleForgetPassword}>
+            <Text style={styles.forgetPassword}>Forget Password?</Text>
+          </TouchableOpacity>
 
-      <TouchableOpacity onPress={handleForgetPassword}>
-        <Text style={styles.forgetPassword}>Forget Password?</Text>
-      </TouchableOpacity>
+          <TouchableOpacity style={styles.loginButton} onPress={handleLogin} disabled={loading}>
+            <LinearGradient
+              colors={['#E100FF', '#2575fc', '#1C15ED', '#0544BA']}
+              locations={[0, 0.4, 0.6, 0.7]}
+              start={{ x: 0, y: 1 }}
+              end={{ x: 2, y: 3 }}
+              style={styles.loginButton}>
+              <Text style={styles.loginButtonText}>{loading ? 'LOGGING IN...' : 'LOGIN'}</Text>
+            </LinearGradient>
+          </TouchableOpacity>
 
-      <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-        <LinearGradient
-          // Adding gradient to the button with 4 shades
-          colors={['#E100FF', '#2575fc', '#1C15ED', '#0544BA']}
-          locations={[0, 0.4, 0.6, 0.7]} // Adjust the locations for gradient effect
-          start={{ x: 0, y: 1 }}  // Adjust the start and end points for gradient effect
-          end={{ x: 2, y: 3 }} // Adjust the start and end points for gradient effect
-          style={styles.loginButton}>
-          <Text style={styles.loginButtonText}>LOGIN</Text>
-        </LinearGradient>
-      </TouchableOpacity>
+          <View style={styles.orContainer}>
+            <View style={styles.line} />
+            <Text style={styles.orText}>or</Text>
+            <View style={styles.line} />
+          </View>
 
-      <View style={styles.orContainer}>
-        <View style={styles.line} />
-        <Text style={styles.orText}>or</Text>
-        <View style={styles.line} />
-      </View>
+          <TouchableOpacity style={styles.googleButton} onPress={handleGoogleLogin} disabled={loading}>
+            <Image
+              source={{ uri: 'https://img.icons8.com/color/48/000000/google-logo.png' }}
+              resizeMode="contain"
+              style={styles.googleLogo}
+            />
+            <Text style={styles.googleButtonText}>Sign in with Google</Text>
+          </TouchableOpacity>
 
-      <TouchableOpacity style={styles.googleButton} onPress={handleGoogleLogin}>
-        <Image
-          source={{ uri: 'https://img.icons8.com/color/48/000000/google-logo.png' }} // Replace with your Google logo
-          resizeMode="contain"
-          style={styles.googleLogo}
-        />
-        <Text style={styles.googleButtonText}>Sign in with Google</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity onPress={handleRegister}>
-        <Text style={styles.registerText}>
-          New User? <Text style={styles.registerLink}>Register Here</Text>
-        </Text>
-      </TouchableOpacity>
-
+          <TouchableOpacity onPress={handleRegister}>
+            <Text style={styles.registerText}>
+              New User? <Text style={styles.registerLink}>Register Here</Text>
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </KeyboardAwareScrollView>
       <Toast />
-    </View>
+    </SafeAreaView>
   );
 };
 

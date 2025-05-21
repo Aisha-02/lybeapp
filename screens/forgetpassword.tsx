@@ -1,16 +1,27 @@
 import React, { useState } from 'react';
-import { View, TextInput, Text, TouchableOpacity } from 'react-native';
+import { 
+  View, 
+  TextInput, 
+  Text, 
+  TouchableOpacity, 
+  SafeAreaView, 
+  Platform,
+  Keyboard
+} from 'react-native';
 import { sendPasswordResetEmail } from 'firebase/auth';
 import app from '../firebaseconfig.js';
 import styles from '../styles/AuthStyles';
-import { LinearGradient} from 'expo-linear-gradient';
+import { LinearGradient } from 'expo-linear-gradient';
 import { getAuth } from 'firebase/auth';
 import Toast from 'react-native-toast-message';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
 const ForgetPasswordScreen = ({ navigation }: any) => {
   const [email, setEmail] = useState('');
+  const [loading, setLoading] = useState(false);
   const auth = getAuth(app);
+
   const handleForgetPassword = async () => {
     if (!email.trim()) {
       Toast.show({
@@ -21,6 +32,8 @@ const ForgetPasswordScreen = ({ navigation }: any) => {
       return;
     }
 
+    Keyboard.dismiss();
+    setLoading(true);
     try {
       await sendPasswordResetEmail(auth, email);
       Toast.show({
@@ -36,45 +49,65 @@ const ForgetPasswordScreen = ({ navigation }: any) => {
         text1: 'Error',
         text2: error.message || 'Something went wrong.',
       });
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.header}>Reset Your Password</Text>
+    <SafeAreaView style={{ flex: 1 }}>
+      <KeyboardAwareScrollView
+        contentContainerStyle={{ flexGrow: 1 }}
+        keyboardShouldPersistTaps="handled"
+        enableOnAndroid={true}
+        enableResetScrollToCoords={false}
+        extraScrollHeight={20}
+        extraHeight={Platform.OS === 'ios' ? 120 : 0}
+        resetScrollToCoords={{ x: 0, y: 0 }}
+      >
+        <View style={styles.container}>
+          <Text style={styles.header}>Reset Your Password</Text>
 
-      <View style={styles.inputContainer}>
-        <TextInput
-          style={styles.input}
-          placeholder="Enter your registered email"
-          placeholderTextColor="#888"
-          value={email}
-          onChangeText={setEmail}
-          keyboardType="email-address"
-        />
-        <Ionicons name="mail-outline" size={24} color="#888" style={styles.inputIcon} />
-      </View>
+          <View style={styles.inputContainer}>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter your registered email"
+              placeholderTextColor="#888"
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+            />
+            <Ionicons name="mail-outline" size={24} color="#888" style={styles.inputIcon} />
+          </View>
 
-      <TouchableOpacity style={styles.loginButton} onPress={handleForgetPassword}>
-        <LinearGradient
-        // Adding gradient to the button with 4 shades
-          colors={['#E100FF', '#2575fc', '#1C15ED', '#0544BA']}   
-          locations={[0, 0.4, 0.6, 0.7]} // Adjust the locations for gradient effect
-          start={{ x: 0, y: 1 }}  // Adjust the start and end points for gradient effect
-          end={{ x: 2, y: 3 }} // Adjust the start and end points for gradient effect
-          style={styles.loginButton}>
-          <Text style={styles.loginButtonText}>Send Reset Email</Text>
-        </LinearGradient>
-      </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.loginButton} 
+            onPress={handleForgetPassword}
+            disabled={loading}
+          >
+            <LinearGradient
+              colors={['#E100FF', '#2575fc', '#1C15ED', '#0544BA']}   
+              locations={[0, 0.4, 0.6, 0.7]}
+              start={{ x: 0, y: 1 }}
+              end={{ x: 2, y: 3 }}
+              style={styles.loginButton}
+            >
+              <Text style={styles.loginButtonText}>
+                {loading ? 'SENDING...' : 'SEND RESET EMAIL'}
+              </Text>
+            </LinearGradient>
+          </TouchableOpacity>
 
-      <TouchableOpacity onPress={() => navigation.goBack()}>
-        <Text style={styles.registerText}>
-          Back to <Text style={styles.registerLink}>Login</Text>
-        </Text>
-      </TouchableOpacity>
-
+          <TouchableOpacity onPress={() => navigation.goBack()}>
+            <Text style={styles.registerText}>
+              Back to <Text style={styles.registerLink}>Login</Text>
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </KeyboardAwareScrollView>
       <Toast />
-    </View>
+    </SafeAreaView>
   );
 };
 
