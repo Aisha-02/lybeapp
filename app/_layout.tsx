@@ -6,6 +6,8 @@ import ForgetPassword from '../screens/forgetpassword';
 import Profile from '../screens/completeprofile';
 import TabLayout from './(tabs)/TabLayout';
 import TrackDetails from '@/screens/TrackDetails';
+import ArtistSongs from '@/screens/artistSongs';
+
 
 export type RootStackParamList = {
   Login: undefined;
@@ -14,6 +16,7 @@ export type RootStackParamList = {
   Forget: undefined;
   TrackDetails: undefined; // or with params if needed
   Home: undefined;
+  ArtistSongs: { artistId: string; artistName: string };
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -31,6 +34,7 @@ const AppLayout = () => {
       <Stack.Screen name="CompleteProfile" component={Profile} />
       <Stack.Screen name="Forget" component={ForgetPassword} />
       <Stack.Screen name="TrackDetails" component={TrackDetails} />
+      <Stack.Screen name="ArtistSongs" component={ArtistSongs} />
       <Stack.Screen name="Home" component={TabLayout} />
     </Stack.Navigator>
   );

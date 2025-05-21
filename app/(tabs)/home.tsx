@@ -104,21 +104,6 @@ const Home = () => {
     }
   }, [musicArtists]);
 
-  const handleArtistPress = async (artistId: string) => {
-    try {
-      setLoadingSongs(true);
-      const res = await fetch(`http://192.168.1.81:3000/api/spotify/artist-tracks/${artistId}`);
-      const data = await res.json();
-      const cleanSongs = (data?.songs || []).filter((song: any) => song && (song.track?.id || song.id));
-      setSongs(cleanSongs);
-    } catch (error) {
-      console.error('Error fetching songs for artist:', error);
-      Alert.alert('Error', 'Unable to fetch artist songs.');
-    } finally {
-      setLoadingSongs(false);
-    }
-  };
-
   const renderSongItem = ({ item, index }: any) => {
     const song = item.track || item;
     if (!song?.album?.images?.[0]) return null;
@@ -141,7 +126,7 @@ const Home = () => {
 
     return (
       <TouchableOpacity
-        onPress={() => handleArtistPress(item.id)}
+       onPress={() => navigation.navigate("ArtistSongs", { artistId: item.id, artistName: item.name })}
         style={artistCardWrapper}
       >
         <View style={artistCard}>

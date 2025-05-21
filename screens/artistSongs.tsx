@@ -1,16 +1,15 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
-  TextInput,
   FlatList,
   TouchableOpacity,
   Image,
   ActivityIndicator,
 } from "react-native";
 import IonIcon from "@expo/vector-icons/Ionicons";
-import { useNavigation } from "@react-navigation/native";
-import styles from "../../styles/SearchStyles";
+import { useNavigation, useRoute } from "@react-navigation/native";
+import styles from "../styles/SearchStyles";
 
 type Track = {
   id: string;
@@ -19,30 +18,50 @@ type Track = {
   artists: { name: string }[];
 };
 
-const Search = () => {
+const ArtistSongs = () => {
   const navigation = useNavigation<any>();
+  const route = useRoute<any>();
+  const { artistId, artistName } = route.params || {};
 
-  const [query, setQuery] = useState("");
   const [tracks, setTracks] = useState<Track[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchTracks = async () => {
-    if (!query.trim()) return;
+  useEffect(() => {
+    if (artistId) {
+      fetchArtistTracks(artistId);
+    }
+  }, [artistId]);
 
+  const fetchArtistTracks = async (artistId: string) => {
     setLoading(true);
     setError(null);
-
     try {
-      const res = await fetch(
-        `http://192.168.1.81:3000/api/spotify/search?q=${encodeURIComponent(query)}`
-      );
-      if (!res.ok) throw new Error("Failed to fetch tracks");
+      const res = await fetch(`http://192.168.1.81:3000/api/spotify/artist-tracks/${artistId}`);
+      if (!res.ok) throw new Error("Failed to fetch artist tracks");
 
       const data = await res.json();
-      setTracks(data);
+
+      // Filter and map tracks properly
+      const artistTracks = data.filter((item: any) => item?.id || item?.track?.id);
+      const mappedTracks: Track[] = artistTracks.map((item: any) =>
+        item.track
+          ? {
+              id: item.track.id,
+              name: item.track.name,
+              album: item.track.album,
+              artists: item.track.artists,
+            }
+          : {
+              id: item.id,
+              name: item.name,
+              album: item.album,
+              artists: item.artists,
+            }
+      );
+      setTracks(mappedTracks);
     } catch (err: any) {
-      setError(err.message || "Error fetching tracks");
+      setError(err.message || "Error fetching artist tracks");
     } finally {
       setLoading(false);
     }
@@ -63,18 +82,7 @@ const Search = () => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.searchBar}>
-        <IonIcon name="search" size={20} color="#999" style={{ marginHorizontal: 8 }} />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search for tracks..."
-          placeholderTextColor="#999"
-          value={query}
-          onChangeText={setQuery}
-          onSubmitEditing={fetchTracks}
-          returnKeyType="search"
-        />
-      </View>
+      <Text style={styles.sectionTitle}>{artistName || "Artist Songs"}</Text>
 
       {loading && <ActivityIndicator size="large" color="#1DB954" style={{ marginTop: 20 }} />}
       {error && <Text style={styles.errorText}>{error}</Text>}
@@ -85,11 +93,11 @@ const Search = () => {
         renderItem={renderTrackItem}
         contentContainerStyle={{ paddingBottom: 100 }}
         ListEmptyComponent={
-          !loading ? <Text style={styles.noResults}>No tracks found</Text> : null
+          !loading ? <Text style={styles.noResults}>No songs found for this artist</Text> : null
         }
       />
     </View>
   );
 };
 
-export default Search;
+export default ArtistSongs;

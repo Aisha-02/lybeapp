@@ -10,8 +10,10 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#222",
+    marginTop: 16,
     borderColor: "#444",
     borderWidth: 1,
+    paddingVertical:8,
     borderRadius: 8,
     paddingHorizontal: 8,
     height: 50,
@@ -27,6 +29,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#fff",
     paddingVertical: 0,
+  },
+  sectionTitle: {
+    fontSize: 24,
+    fontWeight: "700",
+    color: "#1DB954",      // Spotify green color for a fresh vibe
+    marginVertical: 16,
+    marginLeft: 12,
   },
   trackItem: {
     flexDirection: "row",
