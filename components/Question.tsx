@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, TouchableOpacity, Image, TextInput, Animated, TextStyle, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, Image, TextInput, Animated, TextStyle, Alert, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../constants/Colors';
 import styles from '../styles/PreferenceStyles';
@@ -62,14 +62,13 @@ const Question = ({ title, type, options, selectedValues, onSelect, onPickImage 
   };
 
   const handleDateChange = (event: any, selectedDate?: Date) => {
-    setShowDatePicker(false);
+    setShowDatePicker(Platform.OS === 'ios');
 
     if (selectedDate) {
       if (validateBirthday(selectedDate)) {
         onSelect(selectedDate);
       } else {
         // If invalid, you might want to keep the old value or set to null
-        // Here we're keeping the old value
         Alert.alert("Invalid Date", dateError);
       }
     }
@@ -86,6 +85,8 @@ const Question = ({ title, type, options, selectedValues, onSelect, onPickImage 
         onChangeText={onSelect}
         placeholder=""
         placeholderTextColor="#999"
+        multiline={type === 'text' && title.includes('bio')}
+        keyboardType={title.includes('phone') ? 'phone-pad' : 'default'}
       />
     </View>
   );

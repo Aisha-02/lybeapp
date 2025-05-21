@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import type { JSX } from 'react';
 import {
   Animated,
   ScrollView,
@@ -8,7 +9,9 @@ import {
   SafeAreaView,
   Dimensions,
   NativeSyntheticEvent,
-  NativeScrollEvent
+  NativeScrollEvent,
+  Platform,
+  Keyboard
 } from 'react-native';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { doc, setDoc, getFirestore } from 'firebase/firestore';
@@ -18,6 +21,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import Question from '../components/Question';
 import ProgressBar from '../components/ProgressBar';
 import styles from '../styles/PreferenceStyles';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
 const { width } = Dimensions.get('window');
 
@@ -56,6 +60,7 @@ const CompleteProfile = ({ route, navigation }: CompleteProfileProps) => {
   const [furthestCompletedPage, setFurthestCompletedPage] = useState(-1);
   const scrollX = useRef(new Animated.Value(0)).current;
   const scrollRef = useRef<ScrollView>(null);
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
 
   const [profilePic, setProfilePic] = useState<string | null>(null);
   const [bio, setBio] = useState('');
@@ -71,6 +76,27 @@ const CompleteProfile = ({ route, navigation }: CompleteProfileProps) => {
   const [favSingers, setFavSingers] = useState<string[]>([]);
 
   const [availableSingers, setAvailableSingers] = useState<string[]>([]);
+
+  // Add keyboard listeners
+  useEffect(() => {
+    const keyboardDidShowListener = Keyboard.addListener(
+      'keyboardDidShow',
+      () => {
+        setKeyboardVisible(true);
+      }
+    );
+    const keyboardDidHideListener = Keyboard.addListener(
+      'keyboardDidHide',
+      () => {
+        setKeyboardVisible(false);
+      }
+    );
+
+    return () => {
+      keyboardDidShowListener.remove();
+      keyboardDidHideListener.remove();
+    };
+  }, []);
 
   // Update furthestCompletedPage whenever a page is completed
   useEffect(() => {
@@ -109,7 +135,7 @@ const CompleteProfile = ({ route, navigation }: CompleteProfileProps) => {
   const isPageComplete = (page: number) => {
     switch (page) {
       case 0:
-        return profilePic !== null && bio.trim() !== '' && birthday.trim() !== '' && pronouns.trim() !== '';
+        return profilePic !== null && bio.trim() !== '' && birthday && pronouns.trim() !== '';
       case 1:
         return vibe.trim() !== '';
       case 2:
@@ -190,6 +216,57 @@ const CompleteProfile = ({ route, navigation }: CompleteProfileProps) => {
     } catch (error) {
       console.error('Error saving preferences:', error);
     }
+  };
+
+  const renderPage = (Page: () => JSX.Element, index: number) => {
+    return (
+      <Animated.View
+        key={index}
+        style={{
+          width,
+          padding: 20,
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <Animated.View
+          style={{
+            backgroundColor: '#09011D',
+            borderRadius: 25,
+            padding: 20,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 5 },
+            shadowOpacity: 0.4,
+            shadowRadius: 6,
+            elevation: 5,
+            width: '100%',
+            transform: [
+              {
+                scale: scrollX.interpolate({
+                  inputRange: [(index - 1) * width, index * width, (index + 1) * width],
+                  outputRange: [0.9, 1, 0.9],
+                  extrapolate: 'clamp',
+                }),
+              },
+            ],
+          }}
+        >
+          {index === 0 ? (
+            <KeyboardAwareScrollView
+              enableOnAndroid={true}
+              enableResetScrollToCoords={false}
+              extraScrollHeight={20}
+              extraHeight={Platform.OS === 'ios' ? 120 : 0}
+              keyboardShouldPersistTaps="handled"
+            >
+              {Page()}
+            </KeyboardAwareScrollView>
+          ) : (
+            Page()
+          )}
+        </Animated.View>
+      </Animated.View>
+    );
   };
 
   const pages = [
@@ -278,43 +355,9 @@ const CompleteProfile = ({ route, navigation }: CompleteProfileProps) => {
             }
           }}
           scrollEventThrottle={16}
+          keyboardShouldPersistTaps="handled"
         >
-          {pages.map((Page, index) => (
-            <Animated.View
-              key={index}
-              style={{
-                width,
-                padding: 20,
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <Animated.View
-                style={{
-                  backgroundColor: '#09011D',
-                  borderRadius: 25,
-                  padding: 20,
-                  shadowColor: '#000',
-                  shadowOffset: { width: 0, height: 5 },
-                  shadowOpacity: 0.4,
-                  shadowRadius: 6,
-                  elevation: 5,
-                  width: '100%',
-                  transform: [
-                    {
-                      scale: scrollX.interpolate({
-                        inputRange: [(index - 1) * width, index * width, (index + 1) * width],
-                        outputRange: [0.9, 1, 0.9],
-                        extrapolate: 'clamp',
-                      }),
-                    },
-                  ],
-                }}
-              >
-                {Page()}
-              </Animated.View>
-            </Animated.View>
-          ))}
+          {pages.map((Page, index) => renderPage(Page, index))}
         </Animated.ScrollView>
 
         {/* Completion reminder message */}
@@ -327,7 +370,12 @@ const CompleteProfile = ({ route, navigation }: CompleteProfileProps) => {
         )}
 
         {/* Navigation buttons */}
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', padding: 20 }}>
+        <View style={{ 
+          flexDirection: 'row', 
+          justifyContent: 'space-between', 
+          padding: 20,
+          paddingBottom: keyboardVisible && Platform.OS === 'ios' ? 40 : 20 // Add extra padding when keyboard is visible on iOS
+        }}>
           {currentPage > 0 && (
             <TouchableOpacity
               onPress={() => scrollToPage(currentPage - 1)}
@@ -347,7 +395,10 @@ const CompleteProfile = ({ route, navigation }: CompleteProfileProps) => {
           {currentPage < pages.length - 1 && (
             <TouchableOpacity
               onPress={() => {
-                if (isPageComplete(currentPage)) scrollToPage(currentPage + 1);
+                if (isPageComplete(currentPage)) {
+                  Keyboard.dismiss();
+                  scrollToPage(currentPage + 1);
+                }
               }}
               disabled={!isPageComplete(currentPage)}
               style={{
@@ -355,6 +406,7 @@ const CompleteProfile = ({ route, navigation }: CompleteProfileProps) => {
                 paddingVertical: 10,
                 paddingHorizontal: 20,
                 borderRadius: 25,
+                marginLeft: currentPage === 0 ? 'auto' : 0,
               }}
             >
               <Text style={{ color: '#fff', fontSize: 16 }}>
