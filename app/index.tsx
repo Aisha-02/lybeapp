@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import Layout from '../app/_layout';
-import { SafeAreaView } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
 import { auth } from '../firebaseconfig';
 import { View, ActivityIndicator } from 'react-native';
@@ -38,12 +38,12 @@ export default function App() {
 
   return (
     <>
-     <SafeAreaView>
+     <SafeAreaProvider>
      <NavigationContainer>
        <Layout />
      </NavigationContainer>
      <Toast/>
-     </SafeAreaView>
+     </SafeAreaProvider>
      </>
   );
 }

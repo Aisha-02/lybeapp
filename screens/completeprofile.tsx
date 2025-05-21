@@ -135,7 +135,7 @@ const CompleteProfile = ({ route, navigation }: CompleteProfileProps) => {
   const isPageComplete = (page: number) => {
     switch (page) {
       case 0:
-        return profilePic !== null && bio.trim() !== '' && birthday.trim() !== '' && pronouns.trim() !== '';
+        return profilePic !== null && bio.trim() !== '' && birthday !== '' && pronouns.trim() !== '';
       case 1:
         return vibe.trim() !== '';
       case 2:

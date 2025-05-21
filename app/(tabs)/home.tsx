@@ -9,6 +9,7 @@ import app from '../../firebaseconfig';
 import { useNavigation } from '@react-navigation/native';
 import MenuScreen from '../../screens/userMenu';
 import styles from '../../styles/HomeStyles';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const Home = () => {
   const [userName, setUserName] = useState('');
@@ -158,6 +159,7 @@ const Home = () => {
   };
 
   return (
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#121212' }}>
     <View style={styles.container}>
       <ScrollView style={styles.scrollContainer}>
         <View style={styles.topBar}>
@@ -216,6 +218,7 @@ const Home = () => {
 
       {showMenu && <MenuScreen onClose={() => setShowMenu(false)} />}
     </View>
+    </SafeAreaView>
   );
 };
 

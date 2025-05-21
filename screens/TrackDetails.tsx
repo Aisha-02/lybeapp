@@ -5,43 +5,64 @@ import {
   Image,
   TouchableOpacity,
   ActivityIndicator,
-  StyleSheet,
-  Dimensions,
+  ImageBackground,
   Alert,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, AntDesign } from "@expo/vector-icons";
 import { Audio } from "expo-av";
 import Slider from "@react-native-community/slider";
-import YoutubePlayer from "react-native-youtube-iframe";
-import styles from "../styles/TrackDetails"; // Adjust the import path as necessary
+import styles from "../styles/TrackDetails";
 
-const { width } = Dimensions.get("window");
 
-const YOUTUBE_API_KEY = "YOUR_YOUTUBE_API_KEY_HERE"; // <-- Put your key here!
+const fallbackImage = "https://via.placeholder.com/500x500.png?text=No+Image";
 
 const TrackDetails = ({ route, navigation }: any) => {
   const { track } = route.params;
-
   const [isPlaying, setIsPlaying] = useState(false);
   const [loading, setLoading] = useState(false);
   const [position, setPosition] = useState(0);
   const [duration, setDuration] = useState(0);
+  const [volume, setVolume] = useState(1);
+  const [liked, setLiked] = useState(false);
+  const [deezerPreview, setDeezerPreview] = useState<string | null>(null);
+  const [dzLoading, setDzLoading] = useState(false);
+
   const soundRef = useRef<Audio.Sound | null>(null);
 
-  // YouTube video ID state
-  const [youtubeVideoId, setYoutubeVideoId] = useState<string | null>(null);
-  const [ytLoading, setYtLoading] = useState(false);
-  const [ytError, setYtError] = useState<string | null>(null);
+  const fetchDeezerPreview = useCallback(async () => {
+    setDzLoading(true);
+    try {
+      const query = `${track.name} ${track.artists?.map((a: any) => a.name).join(" ")}`;
+      const response = await fetch(
+        `https://deezerdevs-deezer.p.rapidapi.com/search?q=${encodeURIComponent(query)}`,
+        {
+          method: "GET",
+          headers: {
+            "x-rapidapi-host": "deezerdevs-deezer.p.rapidapi.com",
+            "x-rapidapi-key": "fab1614458msh3d880265eb3d62dp11a8abjsn8a48344ceb42",
+          },
+        }
+      );
+      const data = await response.json();
+      if (data?.data?.[0]?.preview) {
+        setDeezerPreview(data.data[0].preview);
+      } else {
+        setDeezerPreview(null);
+      }
+    } catch (err) {
+      console.error("Deezer fetch error:", err);
+      setDeezerPreview(null);
+    } finally {
+      setDzLoading(false);
+    }
+  }, [track]);
 
-  // Load Spotify audio preview
-  const loadAudio = async () => {
-    if (!track.preview_url) return;
+  const loadAudio = async (url: string) => {
     setLoading(true);
-
     try {
       const { sound, status } = await Audio.Sound.createAsync(
-        { uri: track.preview_url },
-        { shouldPlay: true },
+        { uri: url },
+        { shouldPlay: true, volume },
         onPlaybackStatusUpdate
       );
       soundRef.current = sound;
@@ -50,29 +71,28 @@ const TrackDetails = ({ route, navigation }: any) => {
         setDuration(status.durationMillis || 0);
       }
     } catch (err) {
-      console.error("Error loading audio", err);
       Alert.alert("Audio Error", "Failed to load audio preview.");
     } finally {
       setLoading(false);
     }
   };
 
-  // Playback status update
   const onPlaybackStatusUpdate = (status: any) => {
     if (!status.isLoaded) return;
     setPosition(status.positionMillis);
     setDuration(status.durationMillis || 0);
-
     if (status.didJustFinish) {
       setIsPlaying(false);
       soundRef.current?.setPositionAsync(0);
     }
   };
 
-  // Play/pause toggle
   const togglePlayback = async () => {
+    const url = track.preview_url || deezerPreview;
+    if (!url) return;
+
     if (!soundRef.current) {
-      await loadAudio();
+      await loadAudio(url);
     } else {
       const status = await soundRef.current.getStatusAsync();
       if (status.isLoaded && status.isPlaying) {
@@ -85,53 +105,17 @@ const TrackDetails = ({ route, navigation }: any) => {
     }
   };
 
-  // Seek on slider complete
   const onSlidingComplete = async (value: number) => {
     if (!soundRef.current) return;
     await soundRef.current.setPositionAsync(value);
   };
 
-  // Fetch YouTube videoId using YouTube Data API v3
-  const fetchYoutubeVideoId = useCallback(async () => {
-    setYtLoading(true);
-    setYtError(null);
-
-    try {
-      const query = `${track.name} ${track.artists.map((a: any) => a.name).join(" ")}`;
-      const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=1&q=${encodeURIComponent(
-        query
-      )}&key=${'AIzaSyBS72hqktHFXJj3lHGSBsJIGIX3l22p6TM'}`;
-
-      const response = await fetch(url);
-      const json = await response.json();
-
-      if (json.items && json.items.length > 0) {
-        setYoutubeVideoId(json.items[0].id.videoId);
-      } else {
-        setYoutubeVideoId(null);
-        setYtError("No YouTube video found");
-      }
-    } catch (error) {
-      console.error("YouTube API fetch error:", error);
-      setYtError("Failed to fetch YouTube video");
-      setYoutubeVideoId(null);
-    } finally {
-      setYtLoading(false);
+  const onVolumeChange = async (value: number) => {
+    setVolume(value);
+    if (soundRef.current) {
+      await soundRef.current.setVolumeAsync(value);
     }
-  }, [track]);
-
-  useEffect(() => {
-    if (!track.preview_url) {
-      fetchYoutubeVideoId();
-    }
-  }, [track.preview_url, fetchYoutubeVideoId]);
-
-  // Cleanup sound on unmount
-  useEffect(() => {
-    return () => {
-      soundRef.current?.unloadAsync();
-    };
-  }, []);
+  };
 
   const formatMillis = (millis: number) => {
     const totalSeconds = Math.floor(millis / 1000);
@@ -140,41 +124,61 @@ const TrackDetails = ({ route, navigation }: any) => {
     return `${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
   };
 
+  useEffect(() => {
+    if (!track.preview_url) {
+      fetchDeezerPreview();
+    }
+  }, [track.preview_url, fetchDeezerPreview]);
+
+  useEffect(() => {
+    return () => {
+      soundRef.current?.unloadAsync();
+    };
+  }, []);
+
+  const albumImage = track.album?.images?.[0]?.url || fallbackImage;
+
   return (
-    <View style={styles.container}>
-      <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-        <Ionicons name="arrow-back" size={24} color="#fff" />
-      </TouchableOpacity>
+    <ImageBackground source={{ uri: albumImage }} style={styles.bg} blurRadius={20}>
+      <View style={styles.overlay}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+          <Ionicons name="arrow-back" size={24} color="#fff" />
+        </TouchableOpacity>
 
-      <Image
-        source={{ uri: track.album.images[0]?.url }}
-        style={styles.albumImage}
-        resizeMode="cover"
-      />
+        <Image source={{ uri: albumImage }} style={styles.albumImage} />
 
-      <Text style={styles.trackName}>{track.name}</Text>
-      <Text style={styles.artists}>{track.artists.map((a: any) => a.name).join(", ")}</Text>
-      <Text style={styles.albumName}>Album: {track.album.name}</Text>
-      <Text style={styles.releaseDate}>Release Date: {track.album.release_date}</Text>
+        <Text style={styles.trackName} numberOfLines={1}>
+          {track.name || "Unknown Title"}
+        </Text>
+        <Text style={styles.artists}>
+          {track.artists?.map((a: any) => a.name).join(", ") || "Unknown Artist"}
+        </Text>
+        <Text style={styles.albumInfo}>Album: {track.album?.name || "N/A"}</Text>
+        <Text style={styles.albumInfo}>
+          Release: {track.album?.release_date || "Unknown"}
+        </Text>
 
-      {/* Spotify preview audio player */}
-      {track.preview_url ? (
-        <>
+        <View style={styles.sliderWrapper}>
           <Slider
             style={styles.slider}
             minimumValue={0}
             maximumValue={duration}
             value={position}
+            onSlidingComplete={onSlidingComplete}
             minimumTrackTintColor="#1DB954"
             maximumTrackTintColor="#fff"
             thumbTintColor="#1DB954"
-            onSlidingComplete={onSlidingComplete}
           />
-
           <View style={styles.timeContainer}>
             <Text style={styles.timeText}>{formatMillis(position)}</Text>
             <Text style={styles.timeText}>{formatMillis(duration)}</Text>
           </View>
+        </View>
+
+        <View style={styles.controls}>
+          <TouchableOpacity onPress={() => setLiked(!liked)}>
+            <AntDesign name={liked ? "heart" : "hearto"} size={28} color="#fff" />
+          </TouchableOpacity>
 
           <TouchableOpacity
             style={[styles.playButton, loading && { opacity: 0.5 }]}
@@ -191,24 +195,32 @@ const TrackDetails = ({ route, navigation }: any) => {
               />
             )}
           </TouchableOpacity>
-        </>
-      ) : ytLoading ? (
-        <ActivityIndicator size="large" color="#1DB954" style={{ marginTop: 40 }} />
-      ) : youtubeVideoId ? (
-        <View style={{ marginTop: 20 }}>
-          <YoutubePlayer
-            height={230}
-            width={width * 0.9}
-            videoId={youtubeVideoId}
-            play={true}
-          />
+
+          <View style={styles.volumeControl}>
+            <Ionicons name="volume-low" size={20} color="#fff" />
+            <Slider
+              style={{ width: 100 }}
+              minimumValue={0}
+              maximumValue={1}
+              step={0.05}
+              value={volume}
+              onValueChange={onVolumeChange}
+              minimumTrackTintColor="#1DB954"
+              maximumTrackTintColor="#fff"
+              thumbTintColor="#1DB954"
+            />
+            <Ionicons name="volume-high" size={20} color="#fff" />
+          </View>
         </View>
-      ) : (
-        <Text style={styles.noPreview}>
-          {ytError || "No preview available"}
-        </Text>
-      )}
-    </View>
+
+        {!track.preview_url && dzLoading && (
+          <ActivityIndicator size="large" color="#1DB954" style={{ marginTop: 20 }} />
+        )}
+        {!track.preview_url && !deezerPreview && !dzLoading && (
+          <Text style={styles.noPreview}>No preview available</Text>
+        )}
+      </View>
+    </ImageBackground>
   );
 };
 
