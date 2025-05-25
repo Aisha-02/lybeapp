@@ -1,16 +1,17 @@
 import React, { useState } from 'react';
-import { 
-  View, 
-  TextInput, 
-  Text, 
-  TouchableOpacity, 
-  SafeAreaView, 
+import {
+  View,
+  TextInput,
+  Text,
+  TouchableOpacity,
+  SafeAreaView,
   Platform,
   Keyboard
 } from 'react-native';
 import { sendPasswordResetEmail } from 'firebase/auth';
 import app from '../firebaseconfig.js';
 import styles from '../styles/AuthStyles';
+import { Colors } from '../constants/Colors';
 import { LinearGradient } from 'expo-linear-gradient';
 import { getAuth } from 'firebase/auth';
 import Toast from 'react-native-toast-message';
@@ -26,8 +27,8 @@ const ForgetPasswordScreen = ({ navigation }: any) => {
     if (!email.trim()) {
       Toast.show({
         type: 'error',
-        text1: 'Input Error',
-        text2: 'Please enter your email address.',
+        text1: 'Email Required',
+        text2: 'Enter your email to continue.',
       });
       return;
     }
@@ -38,16 +39,16 @@ const ForgetPasswordScreen = ({ navigation }: any) => {
       await sendPasswordResetEmail(auth, email);
       Toast.show({
         type: 'success',
-        text1: 'Success 🎉',
-        text2: 'Password reset email sent!',
+        text1: 'Email Sent',
+        text2: 'Check your inbox to reset your password.',
       });
       navigation.goBack();
     } catch (error: any) {
       console.error(error);
       Toast.show({
         type: 'error',
-        text1: 'Error',
-        text2: error.message || 'Something went wrong.',
+        text1: 'Request Failed',
+        text2: error.message || 'Unable to send reset email. Please try again.',
       });
     } finally {
       setLoading(false);
@@ -55,9 +56,9 @@ const ForgetPasswordScreen = ({ navigation }: any) => {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
+    <SafeAreaView style={styles.safeArea}>
       <KeyboardAwareScrollView
-        contentContainerStyle={{ flexGrow: 1 }}
+        contentContainerStyle={styles.contentContainer}
         keyboardShouldPersistTaps="handled"
         enableOnAndroid={true}
         enableResetScrollToCoords={false}
@@ -72,22 +73,22 @@ const ForgetPasswordScreen = ({ navigation }: any) => {
             <TextInput
               style={styles.input}
               placeholder="Enter your registered email"
-              placeholderTextColor="#888"
+              placeholderTextColor={Colors.placeholder}
               value={email}
               onChangeText={setEmail}
               keyboardType="email-address"
               autoCapitalize="none"
             />
-            <Ionicons name="mail-outline" size={24} color="#888" style={styles.inputIcon} />
+            <Ionicons name="mail-outline" size={24} color={Colors.icon} style={styles.inputIcon} />
           </View>
 
-          <TouchableOpacity 
-            style={styles.loginButton} 
+          <TouchableOpacity
+            style={styles.loginButton}
             onPress={handleForgetPassword}
             disabled={loading}
           >
             <LinearGradient
-              colors={['#E100FF', '#2575fc', '#1C15ED', '#0544BA']}   
+              colors={[Colors.linear_grad3, Colors.linear_grad4, Colors.linear_grad5, Colors.linear_grad6]}
               locations={[0, 0.4, 0.6, 0.7]}
               start={{ x: 0, y: 1 }}
               end={{ x: 2, y: 3 }}

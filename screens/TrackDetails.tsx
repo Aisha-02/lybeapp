@@ -12,6 +12,7 @@ import { Ionicons, AntDesign } from "@expo/vector-icons";
 import { Audio } from "expo-av";
 import Slider from "@react-native-community/slider";
 import styles from "../styles/TrackDetails";
+import { Colors } from '../constants/Colors';
 
 
 const fallbackImage = "https://via.placeholder.com/500x500.png?text=No+Image";
@@ -142,7 +143,7 @@ const TrackDetails = ({ route, navigation }: any) => {
     <ImageBackground source={{ uri: albumImage }} style={styles.bg} blurRadius={20}>
       <View style={styles.overlay}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="#fff" />
+          <Ionicons name="arrow-back" size={24} color={Colors.iconActive} />
         </TouchableOpacity>
 
         <Image source={{ uri: albumImage }} style={styles.albumImage} />
@@ -165,9 +166,9 @@ const TrackDetails = ({ route, navigation }: any) => {
             maximumValue={duration}
             value={position}
             onSlidingComplete={onSlidingComplete}
-            minimumTrackTintColor="#1DB954"
-            maximumTrackTintColor="#fff"
-            thumbTintColor="#1DB954"
+            minimumTrackTintColor={Colors.minTrackTint}
+            maximumTrackTintColor={Colors.maxTrackTint}
+            thumbTintColor={Colors.thumbTint}
           />
           <View style={styles.timeContainer}>
             <Text style={styles.timeText}>{formatMillis(position)}</Text>
@@ -177,7 +178,7 @@ const TrackDetails = ({ route, navigation }: any) => {
 
         <View style={styles.controls}>
           <TouchableOpacity onPress={() => setLiked(!liked)}>
-            <AntDesign name={liked ? "heart" : "hearto"} size={28} color="#fff" />
+            <AntDesign name={liked ? "heart" : "hearto"} size={28} color={Colors.text} />
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -186,35 +187,35 @@ const TrackDetails = ({ route, navigation }: any) => {
             disabled={loading}
           >
             {loading ? (
-              <ActivityIndicator size="small" color="#1DB954" />
+              <ActivityIndicator size="small" color={Colors.loading} />
             ) : (
               <Ionicons
                 name={isPlaying ? "pause-circle" : "play-circle"}
                 size={64}
-                color="#1DB954"
+                color={Colors.loading}
               />
             )}
           </TouchableOpacity>
 
           <View style={styles.volumeControl}>
-            <Ionicons name="volume-low" size={20} color="#fff" />
+            <Ionicons name="volume-low" size={20} color={Colors.iconActive} />
             <Slider
-              style={{ width: 100 }}
+              style={styles.slider2}
               minimumValue={0}
               maximumValue={1}
               step={0.05}
               value={volume}
               onValueChange={onVolumeChange}
-              minimumTrackTintColor="#1DB954"
-              maximumTrackTintColor="#fff"
-              thumbTintColor="#1DB954"
+              minimumTrackTintColor={Colors.minTrackTint}
+              maximumTrackTintColor={Colors.maxTrackTint}
+              thumbTintColor= {Colors.thumbTint}
             />
-            <Ionicons name="volume-high" size={20} color="#fff" />
+            <Ionicons name="volume-high" size={20} color={Colors.iconActive} />
           </View>
         </View>
 
         {!track.preview_url && dzLoading && (
-          <ActivityIndicator size="large" color="#1DB954" style={{ marginTop: 20 }} />
+          <ActivityIndicator size="large" color={Colors.loading} style={styles.activityIndicator} />
         )}
         {!track.preview_url && !deezerPreview && !dzLoading && (
           <Text style={styles.noPreview}>No preview available</Text>

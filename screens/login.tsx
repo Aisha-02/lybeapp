@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  View, 
-  TextInput, 
-  Text, 
-  TouchableOpacity, 
-  Image, 
+import {
+  View,
+  TextInput,
+  Text,
+  TouchableOpacity,
+  Image,
   Platform,
   SafeAreaView
 } from 'react-native';
@@ -45,8 +45,8 @@ const LoginScreen = ({ navigation }: any) => {
       console.error("Redirect result error:", error);
       Toast.show({
         type: 'error',
-        text1: 'Sign In Failed',
-        text2: error.message || 'Something went wrong with Google sign-in.',
+        text1: 'Google Sign-In Failed',
+        text2: error.message || 'Please try again.',
       });
     }
   };
@@ -68,15 +68,15 @@ const LoginScreen = ({ navigation }: any) => {
         // Navigate to complete profile for new users
         Toast.show({
           type: 'success',
-          text1: 'Sign In Successful 🎉',
-          text2: 'Welcome! Please complete your profile.',
+          text1: 'Signed In',
+          text2: 'Welcome! Let’s complete your profile.',
         });
         navigation.navigate('CompleteProfile', { uid: user.uid });
       } else {
         // Navigate to home for existing users
         Toast.show({
           type: 'success',
-          text1: 'Sign In Successful 🎉',
+          text1: 'Signed In',
           text2: 'Welcome back!',
         });
         navigation.reset({
@@ -88,7 +88,7 @@ const LoginScreen = ({ navigation }: any) => {
       console.error("Error handling Google user data:", error);
       Toast.show({
         type: 'error',
-        text1: 'Error',
+        text1: 'Sign-In Error',
         text2: 'Something went wrong. Please try again.',
       });
     }
@@ -98,8 +98,8 @@ const LoginScreen = ({ navigation }: any) => {
     if (!email.trim() || !password.trim()) {
       Toast.show({
         type: 'error',
-        text1: 'Input Error',
-        text2: 'Please enter both email and password.',
+        text1: 'Missing Info',
+        text2: 'Enter both email and password to continue.',
       });
       return;
     }
@@ -108,7 +108,7 @@ const LoginScreen = ({ navigation }: any) => {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       Toast.show({
         type: 'success',
-        text1: 'Login Successful 🎉',
+        text1: 'Logged In',
         text2: 'Welcome back!',
       });
       navigation.dispatch(
@@ -122,7 +122,7 @@ const LoginScreen = ({ navigation }: any) => {
       Toast.show({
         type: 'error',
         text1: 'Login Failed',
-        text2: 'Invalid credentials. Please try again.',
+        text2: error.message || 'Invalid credentials. Please try again.',
       });
     } finally {
       setLoading(false);
@@ -148,16 +148,16 @@ const LoginScreen = ({ navigation }: any) => {
         // This is handled separately with expo-auth-session
         Toast.show({
           type: 'error',
-          text1: 'Not Implemented',
-          text2: 'Google Sign In for mobile app requires additional setup.',
+          text1: 'Not Supported',
+          text2: 'Google Sign-In requires additional setup in the mobile app.',
         });
       }
     } catch (error: any) {
       console.error("Google sign in error:", error);
       Toast.show({
         type: 'error',
-        text1: 'Sign In Failed',
-        text2: error.message || 'Something went wrong with Google sign-in.',
+        text1: 'Sign-In Failed',
+        text2: error.message || 'Unable to complete Google sign-in. Please try again.',
       });
     } finally {
       setLoading(false);
@@ -173,9 +173,9 @@ const LoginScreen = ({ navigation }: any) => {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
+    <SafeAreaView style={styles.safeArea}>
       <KeyboardAwareScrollView
-        contentContainerStyle={{ flexGrow: 1 }}
+        contentContainerStyle={styles.contentContainer}
         keyboardShouldPersistTaps="handled"
         enableOnAndroid={true}
         enableResetScrollToCoords={false}
@@ -195,30 +195,30 @@ const LoginScreen = ({ navigation }: any) => {
             <TextInput
               style={styles.input}
               placeholder="Enter Email"
-              placeholderTextColor="#888"
+              placeholderTextColor={Colors.placeholder}
               value={email}
               onChangeText={setEmail}
               keyboardType="email-address"
               autoCapitalize="none"
             />
-            <Ionicons name="mail-outline" size={25} color="#888" style={styles.inputIcon} />
+            <Ionicons name="mail-outline" size={25} color={Colors.icon} style={styles.inputIcon} />
           </View>
 
           <View style={styles.inputContainer}>
             <TextInput
               style={styles.input}
               placeholder="Enter Password"
-              placeholderTextColor="#888"
+              placeholderTextColor={Colors.placeholder}
               value={password}
               onChangeText={setPassword}
               secureTextEntry={!isPasswordVisible}
               autoCapitalize="none"
             />
-            <Ionicons name="lock-closed-outline" size={24} color="#888" style={styles.inputIcon} />
+            <Ionicons name="lock-closed-outline" size={24} color={Colors.icon} style={styles.inputIcon} />
             <Ionicons
               name={!isPasswordVisible ? 'eye-off-outline' : 'eye-outline'}
               size={24}
-              color="#888"
+              color={Colors.icon}
               style={[styles.inputIcon, { right: 16, left: 'auto', position: 'absolute' }]}
               onPress={() => setPasswordVisible(prev => !prev)}
             />
@@ -230,7 +230,7 @@ const LoginScreen = ({ navigation }: any) => {
 
           <TouchableOpacity style={styles.loginButton} onPress={handleLogin} disabled={loading}>
             <LinearGradient
-              colors={['#E100FF', '#2575fc', '#1C15ED', '#0544BA']}
+              colors={[Colors.linear_grad3, Colors.linear_grad4, Colors.linear_grad5, Colors.linear_grad6]}
               locations={[0, 0.4, 0.6, 0.7]}
               start={{ x: 0, y: 1 }}
               end={{ x: 2, y: 3 }}

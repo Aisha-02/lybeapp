@@ -32,7 +32,7 @@ const Question = ({ title, type, options, selectedValues, onSelect, onPickImage 
     }),
     color: animatedLabel.interpolate({
       inputRange: [0, 1],
-      outputRange: [Colors.buttonBackground, '#E100FF'],
+      outputRange: [Colors.buttonBackground, Colors.activity],
     }),
     zIndex: 1,
   };
@@ -75,7 +75,7 @@ const Question = ({ title, type, options, selectedValues, onSelect, onPickImage 
   };
 
   const renderTextInputWithFloatingLabel = () => (
-    <View style={{ position: 'relative', paddingTop: 24 }}>
+    <View style={styles.floatingLabelContainer}>
       <Animated.Text style={labelStyle}>{title}</Animated.Text>
       <TextInput
         style={[styles.input, { color: Colors.text }]}
@@ -84,7 +84,7 @@ const Question = ({ title, type, options, selectedValues, onSelect, onPickImage 
         onBlur={() => setFocus(false)}
         onChangeText={onSelect}
         placeholder=""
-        placeholderTextColor="#999"
+        placeholderTextColor={Colors.ionIcon}
         multiline={type === 'text' && title.includes('bio')}
         keyboardType={title.includes('phone') ? 'phone-pad' : 'default'}
       />
@@ -92,10 +92,10 @@ const Question = ({ title, type, options, selectedValues, onSelect, onPickImage 
   );
 
   const renderDateInputWithFloatingLabel = () => (
-    <View style={{ position: 'relative', paddingTop: 24 }}>
+    <View style={styles.floatingLabelContainer}>
       <Animated.Text style={labelStyle}>{title}</Animated.Text>
       <TouchableOpacity
-        style={[styles.input, { justifyContent: 'center' }]}
+        style={[styles.input, styles.dateInputContainer]}
         onPress={() => {
           setFocus(true);
           setShowDatePicker(true);
@@ -179,13 +179,13 @@ const Question = ({ title, type, options, selectedValues, onSelect, onPickImage 
         onBlur={() => setFocus(false)}
         onChangeText={onSelect}
         placeholder=""
-        placeholderTextColor="#999"
+        placeholderTextColor={Colors.ionIcon}
       />
     );
   };
 
   return (
-    <View style={{ marginBottom: 24 }}>
+    <View style={styles.questionContainer}>
       {type === 'text'
         ? renderTextInputWithFloatingLabel()
         : type === 'date'

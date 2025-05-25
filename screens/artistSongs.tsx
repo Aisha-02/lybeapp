@@ -10,6 +10,7 @@ import {
 import IonIcon from "@expo/vector-icons/Ionicons";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import styles from "../styles/SearchStyles";
+import { Colors } from "../constants/Colors";
 
 type Track = {
   id: string;
@@ -73,7 +74,7 @@ const ArtistSongs = () => {
       onPress={() => navigation.navigate("TrackDetails", { track: item })}
     >
       <Image source={{ uri: item.album.images[0]?.url }} style={styles.albumImage} />
-      <View style={{ flex: 1, marginLeft: 12 }}>
+      <View style={styles.viewProp}>
         <Text style={styles.trackName}>{item.name}</Text>
         <Text style={styles.artistName}>{item.artists.map((a) => a.name).join(", ")}</Text>
       </View>
@@ -84,14 +85,14 @@ const ArtistSongs = () => {
     <View style={styles.container}>
       <Text style={styles.sectionTitle}>{artistName || "Artist Songs"}</Text>
 
-      {loading && <ActivityIndicator size="large" color="#1DB954" style={{ marginTop: 20 }} />}
+      {loading && <ActivityIndicator size="large" color={Colors.loading} style={styles.loading} />}
       {error && <Text style={styles.errorText}>{error}</Text>}
 
       <FlatList
         data={tracks}
         keyExtractor={(item) => item.id}
         renderItem={renderTrackItem}
-        contentContainerStyle={{ paddingBottom: 100 }}
+        contentContainerStyle={styles.contentContainer}
         ListEmptyComponent={
           !loading ? <Text style={styles.noResults}>No songs found for this artist</Text> : null
         }

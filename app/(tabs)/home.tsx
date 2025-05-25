@@ -10,6 +10,7 @@ import { useNavigation } from '@react-navigation/native';
 import MenuScreen from '../../screens/userMenu';
 import styles from '../../styles/HomeStyles';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Colors } from '../../constants/Colors';
 
 const Home = () => {
   const [userName, setUserName] = useState('');
@@ -127,15 +128,15 @@ const Home = () => {
     return (
       <TouchableOpacity
        onPress={() => navigation.navigate("ArtistSongs", { artistId: item.id, artistName: item.name })}
-        style={artistCardWrapper}
+        style={styles.artistCardWrapper}
       >
-        <View style={artistCard}>
+        <View style={styles.artistCard}>
           <Image
             source={{ uri: artistImage }}
-            style={artistImageStyle}
+            style={styles.artistImageStyle}
             resizeMode="cover"
           />
-          <Text style={artistNameText} numberOfLines={2}>
+          <Text style={styles.artistNameText} numberOfLines={2}>
             {item.name}
           </Text>
         </View>
@@ -144,17 +145,17 @@ const Home = () => {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#121212' }}>
+    <SafeAreaView style={styles.safeArea}>
     <View style={styles.container}>
       <ScrollView style={styles.scrollContainer}>
         <View style={styles.topBar}>
           <View style={styles.profileContainer}>
             <Image source={{ uri: profilePic }} style={styles.avatar} />
-            <Text style={styles.greeting}>Hi, {userName}</Text>
+            <Text style={[styles.greeting, { color: Colors.text }]}>Hi, {userName}</Text>
           </View>
 
           <TouchableOpacity style={styles.chatIcon}>
-            <Ionicons name="chatbubble-ellipses-outline" size={28} color="#fff" />
+            <Ionicons name="chatbubble-ellipses-outline" size={28} color={Colors.iconActive} />
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -162,14 +163,14 @@ const Home = () => {
             style={styles.menuIcon}
             accessible accessibilityLabel="Open Menu"
           >
-            <Ionicons name="menu" size={30} color="white" />
+            <Ionicons name="menu" size={30} color={Colors.iconActive} />
           </TouchableOpacity>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>🎧 Made For You</Text>
+          <Text style={[styles.sectionTitle, { color: Colors.text }]}>🎧 Made For You</Text>
           {loadingSongs ? (
-            <ActivityIndicator size="small" color="#fff" />
+            <ActivityIndicator size="small" color={Colors.buttonBackground} />
           ) : songs.length > 0 ? (
             <FlatList
               data={songs}
@@ -179,14 +180,14 @@ const Home = () => {
               showsHorizontalScrollIndicator={false}
             />
           ) : (
-            <Text style={styles.noDataText}>No songs found</Text>
+            <Text style={[styles.noDataText, { color: Colors.subText }]}>No songs found</Text>
           )}
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>🎤 Artists You May Like</Text>
+          <Text style={[styles.sectionTitle, { color: Colors.text }]}>🎤 Artists You May Like</Text>
           {loadingArtists ? (
-            <ActivityIndicator size="small" color="#fff" />
+            <ActivityIndicator size="small" color={Colors.buttonBackground} />
           ) : artists.length > 0 ? (
             <FlatList
               data={artists}
@@ -196,7 +197,7 @@ const Home = () => {
               showsHorizontalScrollIndicator={false}
             />
           ) : (
-            <Text style={styles.noDataText}>No artists found</Text>
+            <Text style={[styles.noDataText, { color: Colors.subText }]}>No artists found</Text>
           )}
         </View>
       </ScrollView>
@@ -205,37 +206,6 @@ const Home = () => {
     </View>
     </SafeAreaView>
   );
-};
-
-const artistCardWrapper = {
-  marginHorizontal: 6,
-};
-
-const artistCard = {
-  backgroundColor: '#1c1c1e',
-  padding: 8,
-  borderRadius: 12,
-  alignItems: 'center' as const,
-  justifyContent: 'center' as const,
-  width: 100,
-  height: 140,
-  shadowColor: '#000',
-  shadowOffset: { width: 0, height: 2 },
-  shadowOpacity: 0.3,
-  shadowRadius: 3,
-  elevation: 4,
-};
-
-const artistImageStyle = {
-  width: 80,
-  height: 80,
-  borderRadius: 40,
-};
-
-const artistNameText = {
-  color: '#fff',
-  marginTop: 6,
-  fontSize: 12,
 };
 
 export default Home;

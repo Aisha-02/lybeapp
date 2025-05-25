@@ -1,6 +1,7 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Colors } from '../../constants/Colors';
+import styles from '../../styles/Index_TabLayout';
 
 // Screens
 import ConnectScreen from './connect';
@@ -18,12 +19,8 @@ const TabLayout = () => {
         headerShown: false,
         tabBarActiveTintColor: Colors.buttonBackground,
         tabBarInactiveTintColor: Colors.buttonText,
-        tabBarStyle: {
-          backgroundColor: Colors.background,
-          paddingBottom: 14,
-          height: 75,
-        },
-        tabBarLabelStyle: { fontSize: 12, fontWeight: 'bold' },
+        tabBarStyle: styles.tabBarStyle,
+        tabBarLabelStyle: styles.tabBarLabelStyle,
       }}
     >
       <Tab.Screen

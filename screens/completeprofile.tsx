@@ -21,6 +21,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import Question from '../components/Question';
 import ProgressBar from '../components/ProgressBar';
 import styles from '../styles/PreferenceStyles';
+import { Colors } from '../constants/Colors';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
 const { width } = Dimensions.get('window');
@@ -220,36 +221,22 @@ const CompleteProfile = ({ route, navigation }: CompleteProfileProps) => {
 
   const renderPage = (Page: () => JSX.Element, index: number) => {
     return (
-      <Animated.View
-        key={index}
-        style={{
-          width,
-          padding: 20,
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
+      <Animated.View key={index} style={styles.pageContainer}>
         <Animated.View
-          style={{
-            backgroundColor: '#09011D',
-            borderRadius: 25,
-            padding: 20,
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 5 },
-            shadowOpacity: 0.4,
-            shadowRadius: 6,
-            elevation: 5,
-            width: '100%',
-            transform: [
-              {
-                scale: scrollX.interpolate({
-                  inputRange: [(index - 1) * width, index * width, (index + 1) * width],
-                  outputRange: [0.9, 1, 0.9],
-                  extrapolate: 'clamp',
-                }),
-              },
-            ],
-          }}
+          style={[
+            styles.cardContainer,
+            {
+              transform: [
+                {
+                  scale: scrollX.interpolate({
+                    inputRange: [(index - 1) * width, index * width, (index + 1) * width],
+                    outputRange: [0.9, 1, 0.9],
+                    extrapolate: 'clamp',
+                  }),
+                },
+              ],
+            },
+          ]}
         >
           {index === 0 ? (
             <KeyboardAwareScrollView
@@ -333,8 +320,8 @@ const CompleteProfile = ({ route, navigation }: CompleteProfileProps) => {
   };
 
   return (
-    <LinearGradient colors={['#11002E', '#2a2a2a']} style={{ flex: 1 }}>
-      <SafeAreaView style={{ flex: 1 }}>
+    <LinearGradient colors={[Colors.linear_grad1, Colors.linear_grad2]} style={styles.gradientContainer}>
+      <SafeAreaView style={styles.safeAreaContainer}>
         <ProgressBar currentStep={currentPage} totalSteps={pages.length} />
 
         <Animated.ScrollView
@@ -362,31 +349,24 @@ const CompleteProfile = ({ route, navigation }: CompleteProfileProps) => {
 
         {/* Completion reminder message */}
         {!isPageComplete(currentPage) && (
-          <View style={{ paddingHorizontal: 20, marginBottom: 10 }}>
-            <Text style={{ color: '#FF6B6B', fontSize: 14, textAlign: 'center' }}>
+          <View style={styles.completionMessage}>
+            <Text style={styles.completionText}>
               Please complete this section before proceeding.
             </Text>
           </View>
         )}
 
         {/* Navigation buttons */}
-        <View style={{ 
-          flexDirection: 'row', 
-          justifyContent: 'space-between', 
-          padding: 20,
-          paddingBottom: keyboardVisible && Platform.OS === 'ios' ? 40 : 20 // Add extra padding when keyboard is visible on iOS
-        }}>
+        <View style={[
+          styles.navigationContainer,
+          keyboardVisible && Platform.OS === 'ios' && styles.navigationContainerKeyboard
+        ]}>
           {currentPage > 0 && (
             <TouchableOpacity
               onPress={() => scrollToPage(currentPage - 1)}
-              style={{
-                backgroundColor: '#4B4B4B',
-                paddingVertical: 10,
-                paddingHorizontal: 20,
-                borderRadius: 25,
-              }}
+              style={styles.backButton}
             >
-              <Text style={{ color: '#fff', fontSize: 16 }}>
+              <Text style={styles.buttonText}>
                 <Ionicons name="arrow-back" size={16} /> Back
               </Text>
             </TouchableOpacity>
@@ -401,15 +381,13 @@ const CompleteProfile = ({ route, navigation }: CompleteProfileProps) => {
                 }
               }}
               disabled={!isPageComplete(currentPage)}
-              style={{
-                backgroundColor: isPageComplete(currentPage) ? '#7A5AF8' : '#4B4B4B',
-                paddingVertical: 10,
-                paddingHorizontal: 20,
-                borderRadius: 25,
-                marginLeft: currentPage === 0 ? 'auto' : 0,
-              }}
+              style={[
+                styles.nextButtonProfile,
+                !isPageComplete(currentPage) && styles.nextButtonDisabled,
+                currentPage === 0 && styles.nextButtonAuto,
+              ]}
             >
-              <Text style={{ color: '#fff', fontSize: 16 }}>
+              <Text style={styles.buttonText}>
                 Next <Ionicons name="arrow-forward" size={16} />
               </Text>
             </TouchableOpacity>
@@ -418,14 +396,9 @@ const CompleteProfile = ({ route, navigation }: CompleteProfileProps) => {
           {currentPage === pages.length - 1 && (
             <TouchableOpacity
               onPress={handleSubmit}
-              style={{
-                backgroundColor: '#7A5AF8',
-                paddingVertical: 10,
-                paddingHorizontal: 20,
-                borderRadius: 25,
-              }}
+              style={styles.finishButton}
             >
-              <Text style={{ color: '#fff', fontSize: 16 }}>Finish</Text>
+              <Text style={styles.buttonText}>Finish</Text>
             </TouchableOpacity>
           )}
         </View>
