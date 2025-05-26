@@ -120,7 +120,6 @@ const Home = () => {
       </TouchableOpacity>
     );
   };
-
   const renderArtistItem = ({ item }: any) => {
     const artistImage = item.images?.[0]?.url;
     if (!artistImage) return null;
@@ -145,7 +144,6 @@ const Home = () => {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
     <View style={styles.container}>
       <ScrollView style={styles.scrollContainer}>
         <View style={styles.topBar}>
@@ -204,7 +202,6 @@ const Home = () => {
 
       {showMenu && <MenuScreen onClose={() => setShowMenu(false)} />}
     </View>
-    </SafeAreaView>
   );
 };
 

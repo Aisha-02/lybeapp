@@ -94,33 +94,51 @@ const Question = ({ title, type, options, selectedValues, onSelect, onPickImage 
   const renderDateInputWithFloatingLabel = () => (
     <View style={styles.floatingLabelContainer}>
       <Animated.Text style={labelStyle}>{title}</Animated.Text>
+  
       <TouchableOpacity
         style={[styles.input, styles.dateInputContainer]}
-        onPress={() => {
-          setFocus(true);
-          setShowDatePicker(true);
-        }}
-        onBlur={() => setFocus(false)}
+        onPress={() => setShowDatePicker(true)}
       >
         <Text style={{ color: selectedValues ? Colors.text : Colors.subText }}>
-          {selectedValues ? selectedValues.toDateString() : ''}
+          {selectedValues ? selectedValues.toDateString() : 'Select date'}
         </Text>
       </TouchableOpacity>
-      
+  
       {dateError ? <Text style={styles.errorText}>{dateError}</Text> : null}
-      
+  
       {showDatePicker && (
         <DateTimePicker
           value={selectedValues || new Date()}
           mode="date"
           display="default"
-          onChange={handleDateChange}
+          onChange={(event, selectedDate) => {
+            const isIOS = Platform.OS === 'ios';
+  
+            if (event.type === 'dismissed') {
+              // User dismissed the picker
+              setShowDatePicker(false);
+              return;
+            }
+  
+            if (selectedDate) {
+              if (validateBirthday(selectedDate)) {
+                onSelect(selectedDate);
+              } else {
+                Alert.alert("Invalid Date", dateError);
+              }
+            }
+  
+            // Hide picker after selection
+            if (!isIOS) {
+              setShowDatePicker(false);
+            }
+          }}
           maximumDate={new Date()}
           minimumDate={new Date(1900, 0, 1)}
         />
       )}
     </View>
-  );
+  );  
 
   const renderOptions = () => {
     if (type === 'image') {

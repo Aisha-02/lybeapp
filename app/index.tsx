@@ -3,7 +3,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import Layout from '../app/_layout';
 import styles from '../styles/Index_TabLayout';
 import { Colors } from '../constants/Colors';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
 import { auth } from '../firebaseconfig';
 import { View, ActivityIndicator } from 'react-native';
@@ -41,10 +41,12 @@ export default function App() {
   return (
     <>
      <SafeAreaProvider>
+      <SafeAreaView style={{ flex: 1}}>
      <NavigationContainer>
        <Layout />
      </NavigationContainer>
      <Toast/>
+     </SafeAreaView>
      </SafeAreaProvider>
      </>
   );

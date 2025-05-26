@@ -7,6 +7,7 @@ import Profile from '../screens/completeprofile';
 import TabLayout from './(tabs)/TabLayout';
 import TrackDetails from '@/screens/TrackDetails';
 import ArtistSongs from '@/screens/artistSongs';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 
 export type RootStackParamList = {
@@ -23,6 +24,7 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 
 const AppLayout = () => {
   return (
+    <SafeAreaView style={{ flex: 1, backgroundColor: 'Black' }}>
     <Stack.Navigator
       initialRouteName="Login"
       screenOptions={{
@@ -37,6 +39,7 @@ const AppLayout = () => {
       <Stack.Screen name="ArtistSongs" component={ArtistSongs} />
       <Stack.Screen name="Home" component={TabLayout} />
     </Stack.Navigator>
+    </SafeAreaView>
   );
 };
 

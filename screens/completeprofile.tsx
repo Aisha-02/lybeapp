@@ -23,6 +23,7 @@ import ProgressBar from '../components/ProgressBar';
 import styles from '../styles/PreferenceStyles';
 import { Colors } from '../constants/Colors';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 const { width } = Dimensions.get('window');
 
@@ -320,10 +321,9 @@ const CompleteProfile = ({ route, navigation }: CompleteProfileProps) => {
   };
 
   return (
+    <SafeAreaView style={styles.safeAreaContainer}>
     <LinearGradient colors={[Colors.linear_grad1, Colors.linear_grad2]} style={styles.gradientContainer}>
-      <SafeAreaView style={styles.safeAreaContainer}>
         <ProgressBar currentStep={currentPage} totalSteps={pages.length} />
-
         <Animated.ScrollView
           ref={scrollRef}
           horizontal
@@ -402,8 +402,8 @@ const CompleteProfile = ({ route, navigation }: CompleteProfileProps) => {
             </TouchableOpacity>
           )}
         </View>
-      </SafeAreaView>
     </LinearGradient>
+    </SafeAreaView>
   );
 };
 

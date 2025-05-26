@@ -9,7 +9,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.card_background,
-    paddingTop: 40,
+    paddingTop: 20,
     paddingHorizontal: 20,
   },
   scrollContainer: {
@@ -19,7 +19,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 30,
   },
   profileContainer: {
     flexDirection: 'row',

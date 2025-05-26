@@ -41,9 +41,9 @@ export const Colors = {
   song_card: '#1E1E1E',          // Background color for song cards
   song_text: '#EAEAEA',          // Text color for song titles
   artist_card: '#242424',        // Background color for artist cards
-  artist_text: 'FFFFFF',         // Text color for artist names
-  nodata_text: 'BBBBBB',         // Text color for "No Data" message
-  section: 'FFFFFF',             // Section title color
+  artist_text: '#FFFFFF',         // Text color for artist names
+  nodata_text: '#BBBBBB',         // Text color for "No Data" message
+  section: '#FFFFFF',             // Section title color
 
   searchBar: '#222',             // Search bar background color
   searchBarBorder: '#444',       // Border color for search bar
