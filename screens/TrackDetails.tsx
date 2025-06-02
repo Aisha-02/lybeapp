@@ -13,8 +13,8 @@ import { Audio } from "expo-av";
 import Slider from "@react-native-community/slider";
 import styles from "../styles/TrackDetails";
 import { Colors } from '../constants/Colors';
-
-
+import { auth, db } from '../firebaseconfig'; // Adjust the import path as needed
+import { doc, collection, setDoc, getDoc, deleteDoc } from 'firebase/firestore';
 const fallbackImage = "https://via.placeholder.com/500x500.png?text=No+Image";
 
 const TrackDetails = ({ route, navigation }: any) => {
@@ -29,6 +29,22 @@ const TrackDetails = ({ route, navigation }: any) => {
   const [dzLoading, setDzLoading] = useState(false);
 
   const soundRef = useRef<Audio.Sound | null>(null);
+
+  useEffect(() => {
+    const checkIfLiked = async () => {
+      const user = auth.currentUser;
+      if (!user) return;
+
+      const userId = user.uid;
+      const likedRef = doc(collection(db, "users", userId, "likedSongs"), track.id);
+      const docSnap = await getDoc(likedRef);
+      if (docSnap.exists()) {
+        setLiked(true);
+      }
+    };
+
+    checkIfLiked();
+  }, [track.id]);
 
   const fetchDeezerPreview = useCallback(async () => {
     setDzLoading(true);
@@ -57,6 +73,44 @@ const TrackDetails = ({ route, navigation }: any) => {
       setDzLoading(false);
     }
   }, [track]);
+
+  const handleLikeToggle = async () => {
+    const user = auth.currentUser;
+    if (!user) {
+      Alert.alert("Please log in to like songs");
+      return;
+    }
+
+    const userId = user.uid;
+    const likedRef = doc(collection(db, "users", userId, "likedSongs"), track.id);
+
+    try {
+      const docSnap = await getDoc(likedRef);
+
+      if (docSnap.exists()) {
+        // Song is already liked → unlike it
+        await deleteDoc(likedRef);
+        setLiked(false);
+      } else {
+        // Song is not liked → like it
+        await setDoc(likedRef, {
+          id: track.id,
+          name: track.name,
+          artists: track.artists?.map((a: any) => a.name),
+          album: {
+            name: track.album?.name,
+            images: track.album?.images?.[0]?.url,
+            release_date: track.album?.release_date,
+          },
+          preview_url: track.preview_url || deezerPreview || null,
+          likedAt: new Date(),
+        });
+        setLiked(true);
+      }
+    } catch (error) {
+      console.error("Error toggling like:", error);
+    }
+  };
 
   const loadAudio = async (url: string) => {
     setLoading(true);
@@ -137,7 +191,12 @@ const TrackDetails = ({ route, navigation }: any) => {
     };
   }, []);
 
-  const albumImage = track.album?.images?.[0]?.url || fallbackImage;
+  const albumImage = track.album?.images?.[0]?.url ||  track.album?.images || fallbackImage ;
+  const artistNames = Array.isArray(track.artists)
+  ? typeof track.artists[0] === 'string'
+    ? track.artists.join(', ')
+    : track.artists.map((a: any) => a.name).join(', ')
+  : 'Unknown Artist';
 
   return (
     <ImageBackground source={{ uri: albumImage }} style={styles.bg} blurRadius={20}>
@@ -151,9 +210,7 @@ const TrackDetails = ({ route, navigation }: any) => {
         <Text style={styles.trackName} numberOfLines={1}>
           {track.name || "Unknown Title"}
         </Text>
-        <Text style={styles.artists}>
-          {track.artists?.map((a: any) => a.name).join(", ") || "Unknown Artist"}
-        </Text>
+        <Text style={styles.artists}>{artistNames}</Text>
         <Text style={styles.albumInfo}>Album: {track.album?.name || "N/A"}</Text>
         <Text style={styles.albumInfo}>
           Release: {track.album?.release_date || "Unknown"}
@@ -177,7 +234,7 @@ const TrackDetails = ({ route, navigation }: any) => {
         </View>
 
         <View style={styles.controls}>
-          <TouchableOpacity onPress={() => setLiked(!liked)}>
+          <TouchableOpacity onPress={handleLikeToggle}>
             <AntDesign name={liked ? "heart" : "hearto"} size={28} color={Colors.text} />
           </TouchableOpacity>
 
@@ -208,7 +265,7 @@ const TrackDetails = ({ route, navigation }: any) => {
               onValueChange={onVolumeChange}
               minimumTrackTintColor={Colors.minTrackTint}
               maximumTrackTintColor={Colors.maxTrackTint}
-              thumbTintColor= {Colors.thumbTint}
+              thumbTintColor={Colors.thumbTint}
             />
             <Ionicons name="volume-high" size={20} color={Colors.iconActive} />
           </View>

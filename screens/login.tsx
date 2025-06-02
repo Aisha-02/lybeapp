@@ -111,17 +111,17 @@ const LoginScreen = ({ navigation }: any) => {
         text1: 'Logged In',
         text2: 'Welcome back!',
       });
-      navigation.reset({
-        index: 0,
-        routes: [{ name: 'CompleteProfile', params: { uid: userCredential.user.uid } }],
+      // navigation.reset({
+      //   index: 0,
+      //   routes: [{ name: 'CompleteProfile', params: { uid: userCredential.user.uid } }],
 
-      })
-      // navigation.dispatch(
-      //   navigation.reset({
-      //     index: 0,
-      //     routes: [{ name: 'Home' }],
-      //   })
-      // );
+      // })
+      navigation.dispatch(
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'Home' }],
+        })
+      );
     } catch (error: any) {
       console.error(error);
       Toast.show({

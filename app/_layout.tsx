@@ -7,6 +7,7 @@ import Profile from '../screens/completeprofile';
 import TabLayout from './(tabs)/TabLayout';
 import TrackDetails from '@/screens/TrackDetails';
 import ArtistSongs from '@/screens/artistSongs';
+import playlists from '@/screens/Playlists';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 
@@ -18,6 +19,7 @@ export type RootStackParamList = {
   TrackDetails: undefined; // or with params if needed
   Home: undefined;
   ArtistSongs: { artistId: string; artistName: string };
+  Playlists: { isLiked: Boolean , playlist: string }
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -37,6 +39,7 @@ const AppLayout = () => {
       <Stack.Screen name="Forget" component={ForgetPassword} />
       <Stack.Screen name="TrackDetails" component={TrackDetails} />
       <Stack.Screen name="ArtistSongs" component={ArtistSongs} />
+      <Stack.Screen name="Playlists" component={playlists} />
       <Stack.Screen name="Home" component={TabLayout} />
     </Stack.Navigator>
     </SafeAreaView>

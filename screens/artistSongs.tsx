@@ -38,7 +38,7 @@ const ArtistSongs = () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`http://192.168.1.81:3000/api/spotify/artist-tracks/${artistId}`);
+      const res = await fetch(`http://192.168.1.84:3000/api/spotify/artist-tracks/${artistId}`);
       if (!res.ok) throw new Error("Failed to fetch artist tracks");
 
       const data = await res.json();
