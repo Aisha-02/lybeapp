@@ -38,22 +38,22 @@ const PlaylistPage = () => {
 
   const handleCreatePlaylist = async () => {
     if (!newPlaylistName.trim()) return;
-
+  
     if (!user) {
       Alert.alert('Error', 'User not authenticated');
       return;
     }
-
+  
     try {
       await addDoc(collection(db, 'users', user.uid, 'playlists'), {
         name: newPlaylistName,
-        tracks: []
       });
       setNewPlaylistName('');
     } catch (error) {
       Alert.alert('Error', 'Failed to create playlist');
     }
   };
+  
 
   const renderPlaylistItem = ({ item }: { item: { id: string; name?: string } }) => (
     <TouchableOpacity

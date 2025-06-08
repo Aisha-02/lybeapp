@@ -67,4 +67,5 @@ export const Colors = {
   finishButton: '#7A5AF8',       // Finish button color
   drawerContainer: '#333333',    // Background color for drawer container
   logoutText: '#FF5C5C',         // Logout text color
+  disabledButton : '#aaa',       // Disabled button color
 }

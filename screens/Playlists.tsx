@@ -14,28 +14,26 @@ import {
   getFirestore,
   doc,
   onSnapshot,
-  updateDoc,
   getDocs,
   collection,
+  deleteDoc,
 } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
-import { Colors } from '../constants/Colors';
 
 type Song = {
-    id: string;
-    name: string;
-    album: {
-      name?: string;
-      images: string;
-      release_date?: string;
-    };
-    artists: string[];
-    preview_url?: string | null;
+  id: string;
+  name: string;
+  album: {
+    name?: string;
+    images: any;
+    release_date?: string;
   };
-  
+  artists: string[];
+  preview_url?: string | null;
+};
 
 const Playlists = () => {
-  const route = useRoute();
+  const route = useRoute<any>();
   const navigation = useNavigation<any>();
   const db = getFirestore();
   const auth = getAuth();
@@ -46,31 +44,30 @@ const Playlists = () => {
     | { isLiked?: never; playlist: { id: string; name: string } };
 
   const [tracks, setTracks] = useState<Song[]>([]);
-  
+
   useEffect(() => {
-   if (!user) return;
+    if (!user) return;
 
-   const fetchAndEnrichTracks = async (trackDocs: any[]) => {
-    try {
-      const enrichedTracks: Song[] = await Promise.all(
-        trackDocs.map(async (doc) => {
-          const trackData = doc.data ? doc.data() : doc; // if doc is raw object
-          return {
-            id: trackData.id,
-            name: trackData.name || 'Unknown',
-            album: trackData.album || { image: 'https://via.placeholder.com/60' },
-            artists: trackData.artists || [],
-            preview_url: trackData.preview_url || null,
-        } as Song;
-   })
-      );
-
-      setTracks(enrichedTracks); // ✅ <--- This was missing
-    } catch (err) {
-      console.error(err);
-      Alert.alert('Error', 'Failed to fetch song details');
-    }
-  };
+    const fetchAndEnrichTracks = async (trackDocs: any[]) => {
+      try {
+        const enrichedTracks: Song[] = await Promise.all(
+          trackDocs.map(async (doc) => {
+            const trackData = doc.data ? doc.data() : doc;
+            return {
+              id: trackData.id,
+              name: trackData.name || 'Unknown',
+              album: trackData.album || { images: 'https://via.placeholder.com/60' },
+              artists: trackData.artists || [],
+              preview_url: trackData.preview_url || null,
+            } as Song;
+          })
+        );
+        setTracks(enrichedTracks);
+      } catch (err) {
+        console.error(err);
+        Alert.alert('Error', 'Failed to fetch song details');
+      }
+    };
 
     if (isLiked) {
       const fetchLikedSongs = async () => {
@@ -83,25 +80,55 @@ const Playlists = () => {
       };
       fetchLikedSongs();
     } else if (playlist) {
-      const playlistRef = doc(db, 'users', user.uid, 'playlists', playlist.id);
-      const unsubscribe = onSnapshot(playlistRef, (docSnap) => {
-        if (docSnap.exists()) {
-          const rawTracks = docSnap.data().tracks || [];
-          fetchAndEnrichTracks(rawTracks.map((t: any) => ({ id: t.id })));
-        }
+      const playlistSongsRef = collection(
+        db,
+        'users',
+        user.uid,
+        'playlists',
+        playlist.id,
+        'songs'
+      );
+
+      const unsubscribe = onSnapshot(playlistSongsRef, async (snapshot) => {
+        const tracksData = snapshot.docs.map((doc) => doc.data());
+        await fetchAndEnrichTracks(tracksData);
       });
 
       return () => unsubscribe();
     }
   }, [isLiked, playlist, user]);
 
-  const renderTrack = ({ item, index }: { item: Song; index: number }) => (
+  const removeTrack = async (trackId: string) => {
+    if (!playlist || !user) return;
+
+    try {
+      const trackRef = doc(
+        db,
+        'users',
+        user.uid,
+        'playlists',
+        playlist.id,
+        'songs',
+        trackId
+      );
+      await deleteDoc(trackRef);
+    } catch (error) {
+      Alert.alert('Error', 'Failed to remove track');
+    }
+  };
+
+  const renderTrack = ({ item }: { item: Song }) => (
     <TouchableOpacity
       style={styles.trackItem}
       onPress={() => navigation.navigate('TrackDetails', { track: item })}
     >
       <Image
-        source={{ uri: item.album.images || 'https://via.placeholder.com/60' }}
+        source={{
+          uri:
+            typeof item.album.images === 'string'
+              ? item.album.images
+              : item.album.images[0]?.url || 'https://via.placeholder.com/60',
+        }}
         style={styles.albumImage}
       />
       <View style={styles.viewProp}>
@@ -109,27 +136,12 @@ const Playlists = () => {
         <Text style={styles.artistName}>{item.artists.join(', ')}</Text>
       </View>
       {playlist && (
-        <TouchableOpacity onPress={() => removeTrack(index)}>
+        <TouchableOpacity onPress={() => removeTrack(item.id)}>
           <Ionicons name="trash-outline" size={24} color="#ff4d4d" />
         </TouchableOpacity>
       )}
     </TouchableOpacity>
   );
-
-  const removeTrack = async (indexToRemove: number) => {
-    if (!playlist || !user) return;
-    try {
-      const updatedTracks = [...tracks];
-      updatedTracks.splice(indexToRemove, 1);
-
-      const playlistRef = doc(db, 'users', user.uid, 'playlists', playlist.id);
-      await updateDoc(playlistRef, {
-        tracks: updatedTracks.map((track) => ({ id: track.id })), // only save id
-      });
-    } catch (error) {
-      Alert.alert('Error', 'Failed to remove track');
-    }
-  };
 
   return (
     <View style={styles.container}>
@@ -140,9 +152,7 @@ const Playlists = () => {
         data={tracks}
         keyExtractor={(item, index) => item.id || index.toString()}
         renderItem={renderTrack}
-        ListEmptyComponent={
-          <Text style={styles.emptyText}>No songs found.</Text>
-        }
+        ListEmptyComponent={<Text style={styles.emptyText}>No songs found.</Text>}
       />
     </View>
   );
