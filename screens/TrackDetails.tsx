@@ -1,14 +1,22 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import {
   ActivityIndicator,
-  Alert,
+  View,
+  Text,
+  TouchableOpacity,
+  FlatList,
+  TextInput,
+  Modal,
   Image,
   ImageBackground,
   Alert,
 } from "react-native";
 import styles from "../styles/TrackDetails";
 import { Colors } from '../constants/Colors';
+import { Ionicons , AntDesign } from '@expo/vector-icons';
 import { auth, db } from '../firebaseconfig';
+import { Audio } from "expo-av";
+import Slider from "@react-native-community/slider";
 import {
   doc,
   collection,

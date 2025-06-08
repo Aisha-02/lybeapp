@@ -18,7 +18,6 @@
     "@react-navigation/bottom-tabs": "^7.3.10",
     "@react-navigation/elements": "^2.3.8",
     "@react-navigation/native": "^7.1.6",
-    "expo": "53.0.10",
     "expo-auth-session": "~6.2.0",
     "expo-av": "~15.1.5",
     "expo-blur": "~14.1.5",
@@ -58,7 +57,7 @@
     "babel-preset-expo": "~13.0.0",
     "eslint": "^9.25.0",
     "eslint-config-expo": "~9.2.0",
-    "expo": "^53.0.7",
+    "expo": "^53.0.11",
     "typescript": "~5.8.3"
   },
   "private": true
