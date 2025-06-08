@@ -33,7 +33,7 @@ type Song = {
 };
 
 const Playlists = () => {
-  const route = useRoute<any>();
+  const route = useRoute();
   const navigation = useNavigation<any>();
   const db = getFirestore();
   const auth = getAuth();

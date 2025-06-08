@@ -97,7 +97,7 @@ const TrackDetails = ({ route, navigation }: any) => {
           artists: track.artists?.map((a: any) => a.name),
           album: {
             name: track.album?.name,
-            images: track.album?.images?.[0]?.url,
+            images: track.album?.images || [{ url: 'https://via.placeholder.com/60' }],
             release_date: track.album?.release_date,
           },
           preview_url: track.preview_url || deezerPreview || null,
@@ -223,7 +223,7 @@ const TrackDetails = ({ route, navigation }: any) => {
       artists: track.artists?.map((a: any) => a.name),
       album: {
         name: track.album?.name,
-        images: track.album?.images?.[0]?.url,
+        images: track.album?.images || [{ url: 'https://via.placeholder.com/60' }],
         release_date: track.album?.release_date,
       },
       preview_url: track.preview_url || deezerPreview || null,
