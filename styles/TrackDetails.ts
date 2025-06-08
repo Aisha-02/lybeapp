@@ -1,9 +1,14 @@
+import { act } from "react";
 import { StyleSheet, Dimensions } from "react-native";
+import { Colors } from '../constants/Colors';
 const { width } = Dimensions.get("window");
 
 export default StyleSheet.create({
   bg: {
     flex: 1,
+  },
+  activityIndicator: {
+    marginTop: 20,
   },
   overlay: {
     flex: 1,
@@ -27,18 +32,18 @@ export default StyleSheet.create({
   trackName: {
     fontSize: 22,
     fontWeight: "bold",
-    color: "#fff",
+    color: Colors.track,
     textAlign: "center",
     marginBottom: 6,
   },
   artists: {
     fontSize: 16,
-    color: "#ccc",
+    color: Colors.artist2,
     textAlign: "center",
   },
   albumInfo: {
     fontSize: 14,
-    color: "#aaa",
+    color: Colors.albumInfo,
     marginTop: 4,
   },
   sliderWrapper: {
@@ -49,12 +54,15 @@ export default StyleSheet.create({
     width: "100%",
     height: 40,
   },
+  slider2: {
+    width: 100,
+  },
   timeContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
   },
   timeText: {
-    color: "#fff",
+    color: Colors.text,
     fontSize: 12,
   },
   controls: {
@@ -73,7 +81,7 @@ export default StyleSheet.create({
     gap: 5,
   },
   noPreview: {
-    color: "#fff",
+    color: Colors.text,
     marginTop: 30,
     fontSize: 16,
   },

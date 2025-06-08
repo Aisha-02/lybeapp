@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import Layout from '../app/_layout';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import styles from '../styles/Index_TabLayout';
+import { Colors } from '../constants/Colors';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
 import { auth } from '../firebaseconfig';
 import { View, ActivityIndicator } from 'react-native';
@@ -30,8 +32,8 @@ export default function App() {
 
   if (initializing) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#121212' }}>
-        <ActivityIndicator size="large" color="#E100FF" />
+      <View style={styles.viewProp}>
+        <ActivityIndicator size="large" color={Colors.activity} />
       </View>
     );
   }
@@ -39,10 +41,12 @@ export default function App() {
   return (
     <>
      <SafeAreaProvider>
+      <SafeAreaView style={{ flex: 1}}>
      <NavigationContainer>
        <Layout />
      </NavigationContainer>
      <Toast/>
+     </SafeAreaView>
      </SafeAreaProvider>
      </>
   );

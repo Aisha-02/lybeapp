@@ -12,8 +12,9 @@ import {
   View,
 } from "react-native";
 import styles from "../styles/TrackDetails";
-
-
+import { Colors } from '../constants/Colors';
+import { auth, db } from '../firebaseconfig'; // Adjust the import path as needed
+import { doc, collection, setDoc, getDoc, deleteDoc } from 'firebase/firestore';
 const fallbackImage = "https://via.placeholder.com/500x500.png?text=No+Image";
 
 const TrackDetails = ({ route, navigation }: any) => {
@@ -28,6 +29,22 @@ const TrackDetails = ({ route, navigation }: any) => {
   const [dzLoading, setDzLoading] = useState(false);
 
   const soundRef = useRef<Audio.Sound | null>(null);
+
+  useEffect(() => {
+    const checkIfLiked = async () => {
+      const user = auth.currentUser;
+      if (!user) return;
+
+      const userId = user.uid;
+      const likedRef = doc(collection(db, "users", userId, "likedSongs"), track.id);
+      const docSnap = await getDoc(likedRef);
+      if (docSnap.exists()) {
+        setLiked(true);
+      }
+    };
+
+    checkIfLiked();
+  }, [track.id]);
 
   const fetchDeezerPreview = useCallback(async () => {
     setDzLoading(true);
@@ -56,6 +73,44 @@ const TrackDetails = ({ route, navigation }: any) => {
       setDzLoading(false);
     }
   }, [track]);
+
+  const handleLikeToggle = async () => {
+    const user = auth.currentUser;
+    if (!user) {
+      Alert.alert("Please log in to like songs");
+      return;
+    }
+
+    const userId = user.uid;
+    const likedRef = doc(collection(db, "users", userId, "likedSongs"), track.id);
+
+    try {
+      const docSnap = await getDoc(likedRef);
+
+      if (docSnap.exists()) {
+        // Song is already liked → unlike it
+        await deleteDoc(likedRef);
+        setLiked(false);
+      } else {
+        // Song is not liked → like it
+        await setDoc(likedRef, {
+          id: track.id,
+          name: track.name,
+          artists: track.artists?.map((a: any) => a.name),
+          album: {
+            name: track.album?.name,
+            images: track.album?.images?.[0]?.url,
+            release_date: track.album?.release_date,
+          },
+          preview_url: track.preview_url || deezerPreview || null,
+          likedAt: new Date(),
+        });
+        setLiked(true);
+      }
+    } catch (error) {
+      console.error("Error toggling like:", error);
+    }
+  };
 
   const loadAudio = async (url: string) => {
     setLoading(true);
@@ -136,13 +191,18 @@ const TrackDetails = ({ route, navigation }: any) => {
     };
   }, []);
 
-  const albumImage = track.album?.images?.[0]?.url || fallbackImage;
+  const albumImage = track.album?.images?.[0]?.url ||  track.album?.images || fallbackImage ;
+  const artistNames = Array.isArray(track.artists)
+  ? typeof track.artists[0] === 'string'
+    ? track.artists.join(', ')
+    : track.artists.map((a: any) => a.name).join(', ')
+  : 'Unknown Artist';
 
   return (
     <ImageBackground source={{ uri: albumImage }} style={styles.bg} blurRadius={20}>
       <View style={styles.overlay}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="#fff" />
+          <Ionicons name="arrow-back" size={24} color={Colors.iconActive} />
         </TouchableOpacity>
 
         <Image source={{ uri: albumImage }} style={styles.albumImage} />
@@ -150,9 +210,7 @@ const TrackDetails = ({ route, navigation }: any) => {
         <Text style={styles.trackName} numberOfLines={1}>
           {track.name || "Unknown Title"}
         </Text>
-        <Text style={styles.artists}>
-          {track.artists?.map((a: any) => a.name).join(", ") || "Unknown Artist"}
-        </Text>
+        <Text style={styles.artists}>{artistNames}</Text>
         <Text style={styles.albumInfo}>Album: {track.album?.name || "N/A"}</Text>
         <Text style={styles.albumInfo}>
           Release: {track.album?.release_date || "Unknown"}
@@ -165,9 +223,9 @@ const TrackDetails = ({ route, navigation }: any) => {
             maximumValue={duration}
             value={position}
             onSlidingComplete={onSlidingComplete}
-            minimumTrackTintColor="#1DB954"
-            maximumTrackTintColor="#fff"
-            thumbTintColor="#1DB954"
+            minimumTrackTintColor={Colors.minTrackTint}
+            maximumTrackTintColor={Colors.maxTrackTint}
+            thumbTintColor={Colors.thumbTint}
           />
           <View style={styles.timeContainer}>
             <Text style={styles.timeText}>{formatMillis(position)}</Text>
@@ -176,8 +234,8 @@ const TrackDetails = ({ route, navigation }: any) => {
         </View>
 
         <View style={styles.controls}>
-          <TouchableOpacity onPress={() => setLiked(!liked)}>
-            <AntDesign name={liked ? "heart" : "hearto"} size={28} color="#fff" />
+          <TouchableOpacity onPress={handleLikeToggle}>
+            <AntDesign name={liked ? "heart" : "hearto"} size={28} color={Colors.text} />
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -186,35 +244,35 @@ const TrackDetails = ({ route, navigation }: any) => {
             disabled={loading}
           >
             {loading ? (
-              <ActivityIndicator size="small" color="#1DB954" />
+              <ActivityIndicator size="small" color={Colors.loading} />
             ) : (
               <Ionicons
                 name={isPlaying ? "pause-circle" : "play-circle"}
                 size={64}
-                color="#1DB954"
+                color={Colors.loading}
               />
             )}
           </TouchableOpacity>
 
           <View style={styles.volumeControl}>
-            <Ionicons name="volume-low" size={20} color="#fff" />
+            <Ionicons name="volume-low" size={20} color={Colors.iconActive} />
             <Slider
-              style={{ width: 100 }}
+              style={styles.slider2}
               minimumValue={0}
               maximumValue={1}
               step={0.05}
               value={volume}
               onValueChange={onVolumeChange}
-              minimumTrackTintColor="#1DB954"
-              maximumTrackTintColor="#fff"
-              thumbTintColor="#1DB954"
+              minimumTrackTintColor={Colors.minTrackTint}
+              maximumTrackTintColor={Colors.maxTrackTint}
+              thumbTintColor={Colors.thumbTint}
             />
-            <Ionicons name="volume-high" size={20} color="#fff" />
+            <Ionicons name="volume-high" size={20} color={Colors.iconActive} />
           </View>
         </View>
 
         {!track.preview_url && dzLoading && (
-          <ActivityIndicator size="large" color="#1DB954" style={{ marginTop: 20 }} />
+          <ActivityIndicator size="large" color={Colors.loading} style={styles.activityIndicator} />
         )}
         {!track.preview_url && !deezerPreview && !dzLoading && (
           <Text style={styles.noPreview}>No preview available</Text>

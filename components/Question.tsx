@@ -32,7 +32,7 @@ const Question = ({ title, type, options, selectedValues, onSelect, onPickImage 
     }),
     color: animatedLabel.interpolate({
       inputRange: [0, 1],
-      outputRange: [Colors.buttonBackground, '#E100FF'],
+      outputRange: [Colors.buttonBackground, Colors.activity],
     }),
     zIndex: 1,
   };
@@ -75,7 +75,7 @@ const Question = ({ title, type, options, selectedValues, onSelect, onPickImage 
   };
 
   const renderTextInputWithFloatingLabel = () => (
-    <View style={{ position: 'relative', paddingTop: 24 }}>
+    <View style={styles.floatingLabelContainer}>
       <Animated.Text style={labelStyle}>{title}</Animated.Text>
       <TextInput
         style={[styles.input, { color: Colors.text }]}
@@ -84,7 +84,7 @@ const Question = ({ title, type, options, selectedValues, onSelect, onPickImage 
         onBlur={() => setFocus(false)}
         onChangeText={onSelect}
         placeholder=""
-        placeholderTextColor="#999"
+        placeholderTextColor={Colors.ionIcon}
         multiline={type === 'text' && title.includes('bio')}
         keyboardType={title.includes('phone') ? 'phone-pad' : 'default'}
       />
@@ -92,35 +92,53 @@ const Question = ({ title, type, options, selectedValues, onSelect, onPickImage 
   );
 
   const renderDateInputWithFloatingLabel = () => (
-    <View style={{ position: 'relative', paddingTop: 24 }}>
+    <View style={styles.floatingLabelContainer}>
       <Animated.Text style={labelStyle}>{title}</Animated.Text>
+  
       <TouchableOpacity
-        style={[styles.input, { justifyContent: 'center' }]}
-        onPress={() => {
-          setFocus(true);
-          setShowDatePicker(true);
-        }}
-        onBlur={() => setFocus(false)}
+        style={[styles.input, styles.dateInputContainer]}
+        onPress={() => setShowDatePicker(true)}
       >
         <Text style={{ color: selectedValues ? Colors.text : Colors.subText }}>
-          {selectedValues ? selectedValues.toDateString() : ''}
+          {selectedValues ? selectedValues.toDateString() : 'Select date'}
         </Text>
       </TouchableOpacity>
-      
+  
       {dateError ? <Text style={styles.errorText}>{dateError}</Text> : null}
-      
+  
       {showDatePicker && (
         <DateTimePicker
           value={selectedValues || new Date()}
           mode="date"
           display="default"
-          onChange={handleDateChange}
+          onChange={(event, selectedDate) => {
+            const isIOS = Platform.OS === 'ios';
+  
+            if (event.type === 'dismissed') {
+              // User dismissed the picker
+              setShowDatePicker(false);
+              return;
+            }
+  
+            if (selectedDate) {
+              if (validateBirthday(selectedDate)) {
+                onSelect(selectedDate);
+              } else {
+                Alert.alert("Invalid Date", dateError);
+              }
+            }
+  
+            // Hide picker after selection
+            if (!isIOS) {
+              setShowDatePicker(false);
+            }
+          }}
           maximumDate={new Date()}
           minimumDate={new Date(1900, 0, 1)}
         />
       )}
     </View>
-  );
+  );  
 
   const renderOptions = () => {
     if (type === 'image') {
@@ -179,13 +197,13 @@ const Question = ({ title, type, options, selectedValues, onSelect, onPickImage 
         onBlur={() => setFocus(false)}
         onChangeText={onSelect}
         placeholder=""
-        placeholderTextColor="#999"
+        placeholderTextColor={Colors.ionIcon}
       />
     );
   };
 
   return (
-    <View style={{ marginBottom: 24 }}>
+    <View style={styles.questionContainer}>
       {type === 'text'
         ? renderTextInputWithFloatingLabel()
         : type === 'date'

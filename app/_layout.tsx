@@ -1,8 +1,10 @@
+import playlists from '@/screens/Playlists';
 import TrackDetails from '@/screens/TrackDetails';
 import ArtistSongs from '@/screens/artistSongs';
 import ProfileScreen from '@/screens/userProfile';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React from 'react';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Profile from '../screens/completeprofile';
 import ForgetPassword from '../screens/forgetpassword';
 import LoginScreen from '../screens/login';
@@ -18,13 +20,13 @@ export type RootStackParamList = {
   TrackDetails: undefined; // or with params if needed
   Home: undefined;
   ArtistSongs: { artistId: string; artistName: string };
-  ProfileScreen : undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 const AppLayout = () => {
   return (
+    <SafeAreaView style={{ flex: 1, backgroundColor: 'Black' }}>
     <Stack.Navigator
       initialRouteName="Login"
       screenOptions={{
@@ -37,9 +39,11 @@ const AppLayout = () => {
       <Stack.Screen name="Forget" component={ForgetPassword} />
       <Stack.Screen name="TrackDetails" component={TrackDetails} />
       <Stack.Screen name="ArtistSongs" component={ArtistSongs} />
+      <Stack.Screen name="Playlists" component={playlists} />
       <Stack.Screen name="Home" component={TabLayout} />
       <Stack.Screen name= "ProfileScreen" component={ProfileScreen} />
     </Stack.Navigator>
+    </SafeAreaView>
   );
 };
 

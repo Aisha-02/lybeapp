@@ -4,8 +4,9 @@ import { getAuth, signOut } from 'firebase/auth';
 import { doc, getDoc, getFirestore } from 'firebase/firestore';
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Image, Pressable, ScrollView, Text, TouchableOpacity } from 'react-native';
+import { Colors } from '../constants/Colors';
 import app from '../firebaseconfig';
-import styles from '../styles/PreferenceStyles'; // Ensure this file exists or update the path
+import styles from '../styles/PreferenceStyles';
 import ProfileScreen from './userProfile';
 interface Props {
   onClose: () => void;
@@ -67,7 +68,7 @@ const MenuScreen: React.FC<Props> = ({ onClose }) => {
       <Animated.View style={[styles.drawerContainer, { transform: [{ translateX: slideAnim }] }]}>
         {/* Cancel Icon */}
         <TouchableOpacity style={styles.cancelIcon} onPress={onClose}>
-          <Ionicons name="close" size={28} color="white" />
+          <Ionicons name="close" size={28} color={Colors.iconActive} />
         </TouchableOpacity>
 
         {/* Scrollable Menu */}
