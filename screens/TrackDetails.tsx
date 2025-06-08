@@ -1,20 +1,11 @@
-// imports
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import {
-  View,
-  Text,
-  Image,
-  TouchableOpacity,
   ActivityIndicator,
+  Alert,
+  Image,
   ImageBackground,
   Alert,
-  Modal,
-  TextInput,
-  FlatList,
 } from "react-native";
-import { Ionicons, AntDesign } from "@expo/vector-icons";
-import { Audio } from "expo-av";
-import Slider from "@react-native-community/slider";
 import styles from "../styles/TrackDetails";
 import { Colors } from '../constants/Colors';
 import { auth, db } from '../firebaseconfig';

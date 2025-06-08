@@ -1,16 +1,15 @@
-import React, { useState, useEffect } from "react";
-import {
-  View,
-  Text,
-  FlatList,
-  TouchableOpacity,
-  Image,
-  ActivityIndicator,
-} from "react-native";
-import IonIcon from "@expo/vector-icons/Ionicons";
 import { useNavigation, useRoute } from "@react-navigation/native";
-import styles from "../styles/SearchStyles";
+import React, { useEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  FlatList,
+  Image,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { Colors } from "../constants/Colors";
+import styles from "../styles/SearchStyles";
 
 type Track = {
   id: string;
@@ -38,7 +37,8 @@ const ArtistSongs = () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`http://192.168.1.84:3000/api/spotify/artist-tracks/${artistId}`);
+      // const res = await fetch(`http://192.168.1.84:3000/api/spotify/artist-tracks/${artistId}`);
+      const res = await fetch(`http://192.168.1.9:3000/api/spotify/artist-tracks/${artistId}`);
       if (!res.ok) throw new Error("Failed to fetch artist tracks");
 
       const data = await res.json();
