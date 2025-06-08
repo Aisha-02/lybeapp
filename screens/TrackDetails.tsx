@@ -1,16 +1,16 @@
-import React, { useEffect, useRef, useState, useCallback } from "react";
-import {
-  View,
-  Text,
-  Image,
-  TouchableOpacity,
-  ActivityIndicator,
-  ImageBackground,
-  Alert,
-} from "react-native";
-import { Ionicons, AntDesign } from "@expo/vector-icons";
-import { Audio } from "expo-av";
+import { AntDesign, Ionicons } from "@expo/vector-icons";
 import Slider from "@react-native-community/slider";
+import { Audio } from "expo-av";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import {
+  ActivityIndicator,
+  Alert,
+  Image,
+  ImageBackground,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import styles from "../styles/TrackDetails";
 
 

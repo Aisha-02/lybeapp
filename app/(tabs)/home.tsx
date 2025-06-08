@@ -1,15 +1,21 @@
+import ProfileScreen from '@/screens/userProfile';
+import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
+import { getAuth } from 'firebase/auth';
+import { doc, getDoc, getFirestore } from 'firebase/firestore';
 import React, { useEffect, useState } from 'react';
 import {
-  View, Text, Image, ScrollView, TouchableOpacity, FlatList, ActivityIndicator, Alert
+  ActivityIndicator, Alert,
+  FlatList,
+  Image, ScrollView,
+  Text,
+  TouchableOpacity,
+  View
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { getFirestore, doc, getDoc } from 'firebase/firestore';
-import { getAuth } from 'firebase/auth';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import app from '../../firebaseconfig';
-import { useNavigation } from '@react-navigation/native';
 import MenuScreen from '../../screens/userMenu';
 import styles from '../../styles/HomeStyles';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 const Home = () => {
   const [userName, setUserName] = useState('');
@@ -148,10 +154,10 @@ const Home = () => {
     <View style={styles.container}>
       <ScrollView style={styles.scrollContainer}>
         <View style={styles.topBar}>
-          <View style={styles.profileContainer}>
+          <TouchableOpacity style={styles.profileContainer}  onPress={() => navigation.navigate(ProfileScreen, { uid: auth.currentUser?.uid })}>
             <Image source={{ uri: profilePic }} style={styles.avatar} />
             <Text style={styles.greeting}>Hi, {userName}</Text>
-          </View>
+          </TouchableOpacity>
 
           <TouchableOpacity style={styles.chatIcon}>
             <Ionicons name="chatbubble-ellipses-outline" size={28} color="#fff" />

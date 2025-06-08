@@ -1,12 +1,13 @@
-import React from 'react';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import LoginScreen from '../screens/login';
-import RegisterScreen from '../screens/register';
-import ForgetPassword from '../screens/forgetpassword';
-import Profile from '../screens/completeprofile';
-import TabLayout from './(tabs)/TabLayout';
 import TrackDetails from '@/screens/TrackDetails';
 import ArtistSongs from '@/screens/artistSongs';
+import ProfileScreen from '@/screens/userProfile';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import React from 'react';
+import Profile from '../screens/completeprofile';
+import ForgetPassword from '../screens/forgetpassword';
+import LoginScreen from '../screens/login';
+import RegisterScreen from '../screens/register';
+import TabLayout from './(tabs)/TabLayout';
 
 
 export type RootStackParamList = {
@@ -17,6 +18,7 @@ export type RootStackParamList = {
   TrackDetails: undefined; // or with params if needed
   Home: undefined;
   ArtistSongs: { artistId: string; artistName: string };
+  ProfileScreen : undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -36,6 +38,7 @@ const AppLayout = () => {
       <Stack.Screen name="TrackDetails" component={TrackDetails} />
       <Stack.Screen name="ArtistSongs" component={ArtistSongs} />
       <Stack.Screen name="Home" component={TabLayout} />
+      <Stack.Screen name= "ProfileScreen" component={ProfileScreen} />
     </Stack.Navigator>
   );
 };
