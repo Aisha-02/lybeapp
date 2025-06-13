@@ -10,10 +10,12 @@ import {
   Alert,
 } from "react-native";
 import IonIcon from "@expo/vector-icons/Ionicons";
-import { collection, query, where, getDocs, doc, getDoc } from "firebase/firestore";
+import { collection, query, where, getDocs, doc, getDoc, setDoc } from "firebase/firestore";
 import { db } from "../../firebaseconfig";
 import styles from "../../styles/ConnectStyles";
 import { Colors } from '../../constants/Colors';
+import { useRoute, useNavigation } from "@react-navigation/native";
+import { auth } from "../../firebaseconfig";
 
 type User = {
   id: string;
@@ -29,6 +31,10 @@ const Connect = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const navigation = useNavigation<any>();
+
+  const route = useRoute<any>();
+  const track = (route as any)?.params?.track || null;
 
   const searchUsers = async () => {
     if (!searchQuery.trim()) {
@@ -109,7 +115,7 @@ const Connect = () => {
             }
             return user; // Return user without preferences if document doesn't exist
           } catch (error) {
-            console.error(`Error fetching preferences for user ${user.id}:`, error);
+            console.error("Error fetching preferences for user ${user.id}:", error);
             return user; // Return user without preferences if error occurs
           }
         })
@@ -126,15 +132,58 @@ const Connect = () => {
   };
 
   const handleDedicate = async (userId: string, username: string) => {
+    const me = auth.currentUser;
+    if (!me) return;
+
+    if (!track) {
+      // Navigate to song selection screen with user details
+
+      navigation.navigate("SearchSongs", { userId, username });
+      return;
+    }
+
     Alert.alert(
       "Dedicate",
-      `Would you like to dedicate something to ${username}?`,
+      `Do you want to dedicate this track to ${username}?`,
       [
         { text: "Cancel", style: "cancel" },
-        { 
-          text: "Dedicate", 
-          onPress: () => {
-            console.log(`Dedicating to user: ${userId}`);
+        {
+          text: "Send",
+          onPress: async () => {
+            try {
+              const requestRef = doc(db, "users", userId, "friendRequests", me.uid);
+              await setDoc(requestRef, {
+                from: me.uid,
+                fromName: me.displayName || "Someone",
+                track,
+                status: "pending",
+                createdAt: new Date(),
+              });
+
+              const userDoc = await getDoc(doc(db, "users", userId));
+              const token = userDoc.data()?.fcmToken;
+
+              if (token) {
+                await fetch("https://us-central1-lybe-6c648.cloudfunctions.net/sendPushNotification", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    token,
+                    title: `${me.displayName} sent you a dedication!`,
+                    body: `Track: ${track.name}`,
+                    data: {
+                      fromUid: me.uid,
+                      trackId: track.id,
+                    }
+                  }),
+                });
+              }
+
+              Alert.alert("Sent", `Dedication sent to ${username}`);
+            } catch (err) {
+              console.error("Dedicate Error:", err);
+              Alert.alert("Error", "Failed to send dedication. Try again.");
+            }
           }
         }
       ]
@@ -147,8 +196,8 @@ const Connect = () => {
       `Are you sure you want to remove ${username} from your connections?`,
       [
         { text: "Cancel", style: "cancel" },
-        { 
-          text: "Remove", 
+        {
+          text: "Remove",
           style: "destructive",
           onPress: async () => {
             try {
@@ -173,34 +222,34 @@ const Connect = () => {
   const renderUserItem = ({ item }: { item: User }) => (
     <View style={styles.userItem}>
       <View style={styles.userInfo}>
-        <Image 
-          source={{ 
-            uri: item.profilePic && item.profilePic.trim() !== '' 
-              ? item.profilePic 
-              : 'https://via.placeholder.com/60x60/333/fff?text=User' 
-          }} 
+        <Image
+          source={{
+            uri: item.profilePic && item.profilePic.trim() !== ''
+              ? item.profilePic
+              : 'https://via.placeholder.com/60x60/333/fff?text=User'
+          }}
           style={styles.profileImage}
           onError={() => console.log("Image load error for:", item.profilePic)}
         />
         <View style={styles.userDetails}>
           <Text style={styles.username}>{item.username}</Text>
           <Text style={styles.currentVibe}>
-            {item.currentVibe && item.currentVibe.trim() !== '' 
-              ? item.currentVibe 
+            {item.currentVibe && item.currentVibe.trim() !== ''
+              ? item.currentVibe
               : "No vibe set"}
           </Text>
         </View>
       </View>
-      
+
       <View style={styles.actionButtons}>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.dedicateButton}
           onPress={() => handleDedicate(item.id, item.username)}
         >
           <Text style={styles.dedicateText}>Dedicate</Text>
         </TouchableOpacity>
-        
-        <TouchableOpacity 
+
+        <TouchableOpacity
           style={styles.removeButton}
           onPress={() => handleRemove(item.id, item.username)}
         >

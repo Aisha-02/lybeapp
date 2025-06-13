@@ -20,6 +20,8 @@ export type RootStackParamList = {
   TrackDetails: undefined; // or with params if needed
   Home: undefined;
   ArtistSongs: { artistId: string; artistName: string };
+  Playlists: undefined;
+  ProfileScreen: { userId: string };
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();

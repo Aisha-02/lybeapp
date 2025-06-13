@@ -329,7 +329,7 @@ const TrackDetails = ({ route, navigation }: any) => {
             <Ionicons name="add-circle-outline" size={24} color={Colors.iconActive} />
             <Text style={styles.buttonText}>Add to Playlist</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.actionButton} onPress={() => navigation.navigate('UserSearch', { track })}>
+          <TouchableOpacity style={styles.actionButton} onPress={() => navigation.navigate('Home', { screen: 'Connect' , params: { track: track }})}>
             <Ionicons name="send" size={24} color={Colors.iconActive} />
             <Text style={styles.buttonText}>Dedicate</Text>
           </TouchableOpacity>
