@@ -8,6 +8,9 @@ import {
   Platform,
   SafeAreaView
 } from 'react-native';
+import * as Notifications from 'expo-notifications';
+import * as Device from 'expo-device';
+import Constants from 'expo-constants';
 import { signInWithEmailAndPassword, signInWithPopup, signInWithRedirect, getRedirectResult } from 'firebase/auth';
 import app from '../firebaseconfig';
 import { Colors } from '../constants/Colors';
@@ -33,6 +36,40 @@ const LoginScreen = ({ navigation }: any) => {
       checkRedirectResult();
     }
   }, []);
+
+  const updateExpoPushToken = async (uid: string) => {
+    if (!Device.isDevice) {
+      console.warn("Must use physical device for Push Notifications");
+      return;
+    }
+  
+    try {
+      const { status: existingStatus } = await Notifications.getPermissionsAsync();
+      let finalStatus = existingStatus;
+  
+      if (existingStatus !== 'granted') {
+        const { status } = await Notifications.requestPermissionsAsync();
+        finalStatus = status;
+      }
+  
+      if (finalStatus !== 'granted') {
+        console.warn("Permission not granted for notifications");
+        return;
+      }
+  
+      const { data: token } = await Notifications.getExpoPushTokenAsync({
+        projectId: Constants.expoConfig?.extra?.eas?.projectId || Constants.easConfig?.projectId,
+      });
+  
+      await setDoc(doc(db, 'users', uid), {
+        expoPushToken: token,
+      }, { merge: true });
+  
+      console.log("Expo Push Token saved:", token);
+    } catch (error) {
+      console.error("Error getting push token:", error);
+    }
+  };
 
   const checkRedirectResult = async () => {
     try {
@@ -66,6 +103,8 @@ const LoginScreen = ({ navigation }: any) => {
           createdAt: new Date(),
         });
         // Navigate to complete profile for new users
+        await updateExpoPushToken(user.uid);
+
         Toast.show({
           type: 'success',
           text1: 'Signed In',
@@ -74,6 +113,8 @@ const LoginScreen = ({ navigation }: any) => {
         navigation.navigate('CompleteProfile', { uid: user.uid });
       } else {
         // Navigate to home for existing users
+        await updateExpoPushToken(user.uid);
+
         Toast.show({
           type: 'success',
           text1: 'Signed In',
@@ -106,6 +147,10 @@ const LoginScreen = ({ navigation }: any) => {
     setLoading(true);
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const userid = userCredential.user.uid;
+
+      await updateExpoPushToken(userid);
+
       Toast.show({
         type: 'success',
         text1: 'Logged In',

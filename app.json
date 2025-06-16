@@ -17,7 +17,8 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.lybeofficials.lybeapp"
+      "googleServicesFile": "./google-services.json",
+      "package": "com.lybe.android"
     },
     "web": {
       "bundler": "metro",
@@ -45,6 +46,12 @@
         "projectId": "89c9a0d9-5ae8-4526-993f-cd286cb7dcb3"
       }
     },
-    "owner": "lybeofficials"
+    "owner": "lybeofficials",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/89c9a0d9-5ae8-4526-993f-cd286cb7dcb3"
+    }
   }
 }

@@ -12,7 +12,7 @@ import { User, onAuthStateChanged } from 'firebase/auth';
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import Constants from 'expo-constants';
-import { setDoc, doc } from 'firebase/firestore';
+import { setDoc, doc , getDoc} from 'firebase/firestore';
 import { db } from '../firebaseconfig';
 
 Notifications.setNotificationHandler({
@@ -33,45 +33,67 @@ export default function App() {
 
   const registerForPushNotificationsAsync = async () => {
     let token;
-
+  
     if (Device.isDevice) {
       const { status: existingStatus } = await Notifications.getPermissionsAsync();
       let finalStatus = existingStatus;
-
+  
       if (existingStatus !== 'granted') {
         const { status } = await Notifications.requestPermissionsAsync();
         finalStatus = status;
       }
-
+  
       if (finalStatus !== 'granted') {
         Alert.alert('Permission Denied', 'Cannot receive notifications without permission.');
         return;
       }
-
-      token = (await Notifications.getExpoPushTokenAsync()).data;
-      console.log('Expo Push Token:', token);
-      return token;
+  
+      try {
+        // Include projectId for EAS apps
+        const { data: expoPushToken } = await Notifications.getExpoPushTokenAsync({
+          projectId: Constants.expoConfig?.extra?.eas?.projectId || Constants.easConfig?.projectId,
+        });
+  
+        console.log('Expo Push Token:', expoPushToken);
+        return expoPushToken;
+      } catch (err) {
+        console.error('Error getting push token:', err);
+        return;
+      }
     } else {
       Alert.alert('Error', 'Must use physical device for Push Notifications');
     }
   };
+  
 
   useEffect(() => {
     const setupPush = async () => {
       const token = await registerForPushNotificationsAsync();
-      if (token && auth.currentUser?.uid) {
-        await setDoc(doc(db, 'users', auth.currentUser.uid), {
-          expoPushToken: token,
-        }, { merge: true });
+      const uid = auth.currentUser?.uid;
+    
+      if (token && uid) {
+        const userRef = doc(db, 'users', uid);
+        const userDocSnap = await getDoc(userRef);
+        const currentToken = userDocSnap.data()?.expoPushToken;
+    
+        if (currentToken !== token) {
+          await setDoc(userRef, { expoPushToken: token }, { merge: true });
+          console.log('Push token updated in Firestore');
+        } else {
+          console.log('Push token unchanged');
+        }
       }
     };
+    
 
     setupPush();
 
     // Listen for foreground notifications
     notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
-      console.log('Notification Received in foreground:', notification);
+      const { title, body } = notification.request.content;
+      Alert.alert(title || 'Notification', body || '');
     });
+    
 
     // Handle notification tap
     responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {

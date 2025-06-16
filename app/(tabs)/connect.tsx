@@ -131,16 +131,15 @@ const Connect = () => {
     }
   };
 
-  const handleDedicate = async (userId: string, username: string ) => {
+  const handleDedicate = async (userId: string, username: string) => {
     const me = auth.currentUser;
     if (!me) return;
-  
-    if (!track) 
-    {
+
+    if (!track) {
       navigation.navigate("SearchSongs", { userId, username });
       return;
     }
-  
+
     Alert.alert(
       "Dedicate",
       `Do you want to dedicate this track to ${username}?`,
@@ -154,19 +153,19 @@ const Connect = () => {
               const requestRef = doc(db, "users", userId, "friendRequests", me.uid);
               await setDoc(requestRef, {
                 from: me.uid,
-                fromName: me.displayName || "Someone",
+                fromName: userId || "Someone",
                 track,
                 status: "pending",
                 createdAt: new Date(),
               });
-  
+
               // 2. Get receiver's Expo push token
               const userDoc = await getDoc(doc(db, "users", userId));
               const token = userDoc.data()?.expoPushToken; // ✅ Use 'expoPushToken' (not 'fcmToken')
-  
+
               // 3. Send push notification via Expo
               if (token) {
-                await fetch('https://exp.host/--/api/v2/push/send', {
+                const res = await fetch('https://exp.host/--/api/v2/push/send', {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({
@@ -179,8 +178,11 @@ const Connect = () => {
                     },
                   }),
                 });
+                const resData = await res.json();
+                console.log("Push response:", resData);
               }
-  
+
+
               Alert.alert("Sent", `Dedication sent to ${username}`);
             } catch (err) {
               console.error("Dedicate Error:", err);
