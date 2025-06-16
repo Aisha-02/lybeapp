@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import Layout from '../app/_layout';
 import styles from '../styles/Index_TabLayout';
@@ -6,27 +6,90 @@ import { Colors } from '../constants/Colors';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
 import { auth } from '../firebaseconfig';
-import { View, ActivityIndicator } from 'react-native';
-import { User , onAuthStateChanged} from 'firebase/auth'; // Import User type from Firebase Auth
-//import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import { View, ActivityIndicator, Platform, Alert } from 'react-native';
+import { User, onAuthStateChanged } from 'firebase/auth';
 
-// GoogleSignin.configure({
-//   webClientId: '814924696691-li0q9bhp5biqr04183filtevf7pi8bn0.apps.googleusercontent.com', // very important
-// });
+import * as Notifications from 'expo-notifications';
+import * as Device from 'expo-device';
+import Constants from 'expo-constants';
+import { setDoc, doc } from 'firebase/firestore';
+import { db } from '../firebaseconfig';
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: false,
+    shouldSetBadge: false,
+    shouldShowBanner: true,
+    shouldShowList: true,
+  }),
+});
 
 export default function App() {
   const [initializing, setInitializing] = useState(true);
   const [user, setUser] = useState<User | null>(null);
+  const notificationListener = useRef<any>(null);
+  const responseListener = useRef<any>(null);
+
+  const registerForPushNotificationsAsync = async () => {
+    let token;
+
+    if (Device.isDevice) {
+      const { status: existingStatus } = await Notifications.getPermissionsAsync();
+      let finalStatus = existingStatus;
+
+      if (existingStatus !== 'granted') {
+        const { status } = await Notifications.requestPermissionsAsync();
+        finalStatus = status;
+      }
+
+      if (finalStatus !== 'granted') {
+        Alert.alert('Permission Denied', 'Cannot receive notifications without permission.');
+        return;
+      }
+
+      token = (await Notifications.getExpoPushTokenAsync()).data;
+      console.log('Expo Push Token:', token);
+      return token;
+    } else {
+      Alert.alert('Error', 'Must use physical device for Push Notifications');
+    }
+  };
+
+  useEffect(() => {
+    const setupPush = async () => {
+      const token = await registerForPushNotificationsAsync();
+      if (token && auth.currentUser?.uid) {
+        await setDoc(doc(db, 'users', auth.currentUser.uid), {
+          expoPushToken: token,
+        }, { merge: true });
+      }
+    };
+
+    setupPush();
+
+    // Listen for foreground notifications
+    notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
+      console.log('Notification Received in foreground:', notification);
+    });
+
+    // Handle notification tap
+    responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
+      console.log('Notification tapped:', response);
+      // Navigate or handle data
+    });
+
+    return () => {
+      Notifications.removeNotificationSubscription(notificationListener.current);
+      Notifications.removeNotificationSubscription(responseListener.current);
+    };
+  }, []);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
-      if (initializing) {
-        setInitializing(false);
-      }
+      if (initializing) setInitializing(false);
     });
-
-    // Cleanup subscription
     return unsubscribe;
   }, []);
 
@@ -39,15 +102,13 @@ export default function App() {
   }
 
   return (
-    <>
-     <SafeAreaProvider>
-      <SafeAreaView style={{ flex: 1}}>
-     <NavigationContainer>
-       <Layout />
-     </NavigationContainer>
-     <Toast/>
-     </SafeAreaView>
-     </SafeAreaProvider>
-     </>
+    <SafeAreaProvider>
+      <SafeAreaView style={{ flex: 1 }}>
+        <NavigationContainer>
+          <Layout />
+        </NavigationContainer>
+        <Toast />
+      </SafeAreaView>
+    </SafeAreaProvider>
   );
 }

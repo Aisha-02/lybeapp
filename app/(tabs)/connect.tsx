@@ -131,17 +131,16 @@ const Connect = () => {
     }
   };
 
-  const handleDedicate = async (userId: string, username: string) => {
+  const handleDedicate = async (userId: string, username: string ) => {
     const me = auth.currentUser;
     if (!me) return;
-
-    if (!track) {
-      // Navigate to song selection screen with user details
-
+  
+    if (!track) 
+    {
       navigation.navigate("SearchSongs", { userId, username });
       return;
     }
-
+  
     Alert.alert(
       "Dedicate",
       `Do you want to dedicate this track to ${username}?`,
@@ -151,6 +150,7 @@ const Connect = () => {
           text: "Send",
           onPress: async () => {
             try {
+              // 1. Save request to Firestore
               const requestRef = doc(db, "users", userId, "friendRequests", me.uid);
               await setDoc(requestRef, {
                 from: me.uid,
@@ -159,26 +159,28 @@ const Connect = () => {
                 status: "pending",
                 createdAt: new Date(),
               });
-
+  
+              // 2. Get receiver's Expo push token
               const userDoc = await getDoc(doc(db, "users", userId));
-              const token = userDoc.data()?.fcmToken;
-
+              const token = userDoc.data()?.expoPushToken; // ✅ Use 'expoPushToken' (not 'fcmToken')
+  
+              // 3. Send push notification via Expo
               if (token) {
-                await fetch("https://us-central1-lybe-6c648.cloudfunctions.net/sendPushNotification", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
+                await fetch('https://exp.host/--/api/v2/push/send', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({
-                    token,
+                    to: token,
                     title: `${me.displayName} sent you a dedication!`,
                     body: `Track: ${track.name}`,
                     data: {
                       fromUid: me.uid,
                       trackId: track.id,
-                    }
+                    },
                   }),
                 });
               }
-
+  
               Alert.alert("Sent", `Dedication sent to ${username}`);
             } catch (err) {
               console.error("Dedicate Error:", err);

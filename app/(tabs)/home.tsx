@@ -157,6 +157,10 @@ const Home = () => {
             <Text style={[styles.greeting, { color: Colors.text }]}>Hi, {userName}</Text>
           </TouchableOpacity>
 
+          <TouchableOpacity style={styles.chatIcon} onPress={() => navigation.navigate('notification')}>
+            <Ionicons name="notifications-outline" size={28} color={Colors.iconActive} />
+          </TouchableOpacity>
+       
           <TouchableOpacity style={styles.chatIcon}>
             <Ionicons name="chatbubble-ellipses-outline" size={28} color={Colors.iconActive} />
           </TouchableOpacity>
