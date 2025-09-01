@@ -75,8 +75,8 @@ const Home = () => {
         const artistParams = musicArtists.join(',');
 
         const [songsRes, artistRes] = await Promise.all([
-          fetch(`http://192.168.1.87:3000/api/spotify/recommendations?artists=${artistParams}`),
-          fetch(`http://192.168.1.87:3000/api/spotify/artists?artists=${artistParams}`)
+          fetch(`http://192.168.1.102:3000/api/spotify/recommendations?artists=${artistParams}`),
+          fetch(`http://192.168.1.102:3000/api/spotify/artists?artists=${artistParams}`)
         ]);
 
         const songsData = await songsRes.json();

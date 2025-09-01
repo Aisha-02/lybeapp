@@ -149,44 +149,48 @@ const Connect = () => {
           text: "Send",
           onPress: async () => {
             try {
-              // 1. Save request to Firestore
-              const requestRef = doc(db, "users", userId, "friendRequests", me.uid);
-              await setDoc(requestRef, {
-                from: me.uid,
-                fromName: userId || "Someone",
-                track,
-                status: "pending",
-                createdAt: new Date(),
-              });
+        // 1. Fetch my user profile (to get my username)
+        const meDoc = await getDoc(doc(db, "users", me.uid));
+        const meData = meDoc.data();
+        const fromName = meData?.username || me.email || "Someone";
 
-              // 2. Get receiver's Expo push token
-              const userDoc = await getDoc(doc(db, "users", userId));
-              const token = userDoc.data()?.expoPushToken; // ✅ Use 'expoPushToken' (not 'fcmToken')
+        // 2. Save request in Firestore
+        const requestRef = doc(db, "users", userId, "friendRequests", me.uid);
+        await setDoc(requestRef, {
+          from: me.uid,
+          fromName,
+          track,
+          status: "pending",
+          createdAt: new Date(),
+        });
 
-              // 3. Send push notification via Expo
-              if (token) {
-                const res = await fetch('https://exp.host/--/api/v2/push/send', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({
-                    to: token,
-                    title: `${me.displayName} sent you a dedication!`,
-                    body: `Track: ${track.name}`,
-                    data: {
-                      fromUid: me.uid,
-                      trackId: track.id,
-                    },
-                  }),
-                });
-                const resData = await res.json();
-                console.log("Push response:", resData);
-              }
+        // 3. Get recipient’s push token
+        const userDoc = await getDoc(doc(db, "users", userId));
+        const token = userDoc.data()?.expoPushToken;
 
+        // 4. Send push notification
+        if (token) {
+          const res = await fetch("https://exp.host/--/api/v2/push/send", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              to: token,
+              title: `${fromName} sent you a dedication!`,
+              body: `Track: ${track.name}`,
+              data: {
+                fromUid: me.uid,
+                trackId: track.id,
+              },
+            }),
+          });
+          const resData = await res.json();
+          console.log("Push response:", resData);
+        }
 
-              Alert.alert("Sent", `Dedication sent to ${username}`);
-            } catch (err) {
-              console.error("Dedicate Error:", err);
-              Alert.alert("Error", "Failed to send dedication. Try again.");
+        Alert.alert("Sent", `Dedication sent to ${username}`);
+      } catch (err) {
+        console.error("Dedicate Error:", err);
+        Alert.alert("Error", "Failed to send dedication. Try again.");
             }
           }
         }
