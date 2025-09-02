@@ -161,7 +161,7 @@ const Home = () => {
             <Ionicons name="notifications-outline" size={28} color={Colors.iconActive} />
           </TouchableOpacity>
        
-          <TouchableOpacity style={styles.chatIcon}>
+          <TouchableOpacity style={styles.chatIcon} onPress={() => navigation.navigate('messages')} >
             <Ionicons name="chatbubble-ellipses-outline" size={28} color={Colors.iconActive} />
           </TouchableOpacity>
 

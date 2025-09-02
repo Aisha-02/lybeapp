@@ -14,6 +14,7 @@ import * as Device from 'expo-device';
 import Constants from 'expo-constants';
 import { setDoc, doc , getDoc} from 'firebase/firestore';
 import { db } from '../firebaseconfig';
+import { useNavigation } from "@react-navigation/native";
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -30,6 +31,7 @@ export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const notificationListener = useRef<any>(null);
   const responseListener = useRef<any>(null);
+  const navigation = useNavigation<any>();
 
   const registerForPushNotificationsAsync = async () => {
     let token;
@@ -99,6 +101,10 @@ export default function App() {
     responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
       console.log('Notification tapped:', response);
       // Navigate or handle data
+      const screen = response.notification.request.content.data?.screen;
+      if (screen === 'notification') {
+        navigation.navigate('notification');
+      }
     });
 
     return () => {

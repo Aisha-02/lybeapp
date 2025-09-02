@@ -10,6 +10,7 @@ import ForgetPassword from '../screens/forgetpassword';
 import LoginScreen from '../screens/login';
 import RegisterScreen from '../screens/register';
 import TabLayout from './(tabs)/TabLayout';
+import MessageScreen from '@/screens/messages';
 import NotificationScreen from '@/screens/Notification';
 
 
@@ -23,6 +24,7 @@ export type RootStackParamList = {
   ArtistSongs: { artistId: string; artistName: string };
   Playlists: undefined;
   ProfileScreen: { userId: string };
+  messages: undefined;
   notification: undefined;
 };
 
@@ -47,6 +49,7 @@ const AppLayout = () => {
       <Stack.Screen name="Home" component={TabLayout} />
       <Stack.Screen name= "ProfileScreen" component={ProfileScreen} />
       <Stack.Screen name="notification" component={NotificationScreen} />
+      <Stack.Screen name="messages" component={MessageScreen} />
     </Stack.Navigator>
     </SafeAreaView>
   );

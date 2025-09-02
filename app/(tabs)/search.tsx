@@ -10,8 +10,10 @@ import {
 } from "react-native";
 import IonIcon from "@expo/vector-icons/Ionicons";
 import { useNavigation } from "@react-navigation/native";
+import { useRoute } from "@react-navigation/native";
 import styles from "../../styles/SearchStyles";
 import { Colors } from '../../constants/Colors';
+import { sendDedication } from "../../components/dediacteutil";
 
 type Track = {
   id: string;
@@ -22,7 +24,7 @@ type Track = {
 
 const Search = () => {
   const navigation = useNavigation<any>();
-
+  const route = useRoute<any>();
   const [query, setQuery] = useState("");
   const [tracks, setTracks] = useState<Track[]>([]);
   const [loading, setLoading] = useState(false);
@@ -52,7 +54,16 @@ const Search = () => {
   const renderTrackItem = ({ item }: { item: Track }) => (
     <TouchableOpacity
       style={styles.trackItem}
-      onPress={() => navigation.navigate("TrackDetails", { track: item })}
+      onPress={async () => {
+        if (route.params?.userId && route.params?.username) {
+          // Dedicate directly
+          await sendDedication(item, route.params.userId, route.params.username);
+          navigation.goBack(); // Go back to Connect after sending
+        } else {
+          // Normal flow
+          navigation.navigate("TrackDetails", { track: item });
+        }
+      }}
     >
       <Image source={{ uri: item.album.images[0]?.url }} style={styles.albumImage} />
       <View style={styles.viewProp}>

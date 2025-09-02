@@ -32,28 +32,34 @@ const NotificationScreen = () => {
         Alert.alert('Error', 'User not authenticated.');
         return;
       }
-      const ref = doc(db, 'users', me.uid, 'friendRequests', item.id);
-      await updateDoc(ref, { status: response });
-
+  
+      // Update the friend request status
+      const requestRef = doc(db, 'users', me.uid, 'friendRequests', item.id);
+      await updateDoc(requestRef, { status: response });
+  
       if (response === 'accepted') {
-        // Optional: Add to "friends" collection
+        // Save friendship for the current user
         await setDoc(doc(db, 'users', me.uid, 'friends', item.id), {
           uid: item.id,
           name: item.fromName,
+          createdAt: new Date().toISOString(),
         });
+  
+        // Save friendship for the sender
         await setDoc(doc(db, 'users', item.id, 'friends', me.uid), {
           uid: me.uid,
-          name: me.displayName,
+          name: me.displayName || 'Unknown',
+          createdAt: new Date().toISOString(),
         });
       }
-
+  
       Alert.alert('Success', `Request ${response}`);
     } catch (err) {
       console.error(err);
       Alert.alert('Error', 'Something went wrong.');
     }
   };
-
+  
   if (loading) {
     return (
       <View style={styles.centered}>

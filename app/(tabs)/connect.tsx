@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -15,6 +15,7 @@ import { db } from "../../firebaseconfig";
 import styles from "../../styles/ConnectStyles";
 import { Colors } from '../../constants/Colors';
 import { useRoute, useNavigation } from "@react-navigation/native";
+import { sendDedication } from "../../components/dediacteutil";
 import { auth } from "../../firebaseconfig";
 
 type User = {
@@ -136,7 +137,7 @@ const Connect = () => {
     if (!me) return;
 
     if (!track) {
-      navigation.navigate("SearchSongs", { userId, username });
+      navigation.navigate("Search", { userId, username });
       return;
     }
 
@@ -148,50 +149,7 @@ const Connect = () => {
         {
           text: "Send",
           onPress: async () => {
-            try {
-        // 1. Fetch my user profile (to get my username)
-        const meDoc = await getDoc(doc(db, "users", me.uid));
-        const meData = meDoc.data();
-        const fromName = meData?.username || me.email || "Someone";
-
-        // 2. Save request in Firestore
-        const requestRef = doc(db, "users", userId, "friendRequests", me.uid);
-        await setDoc(requestRef, {
-          from: me.uid,
-          fromName,
-          track,
-          status: "pending",
-          createdAt: new Date(),
-        });
-
-        // 3. Get recipient’s push token
-        const userDoc = await getDoc(doc(db, "users", userId));
-        const token = userDoc.data()?.expoPushToken;
-
-        // 4. Send push notification
-        if (token) {
-          const res = await fetch("https://exp.host/--/api/v2/push/send", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              to: token,
-              title: `${fromName} sent you a dedication!`,
-              body: `Track: ${track.name}`,
-              data: {
-                fromUid: me.uid,
-                trackId: track.id,
-              },
-            }),
-          });
-          const resData = await res.json();
-          console.log("Push response:", resData);
-        }
-
-        Alert.alert("Sent", `Dedication sent to ${username}`);
-      } catch (err) {
-        console.error("Dedicate Error:", err);
-        Alert.alert("Error", "Failed to send dedication. Try again.");
-            }
+            await sendDedication(track, userId, username);
           }
         }
       ]
