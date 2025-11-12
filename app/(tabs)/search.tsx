@@ -38,7 +38,7 @@ const Search = () => {
 
     try {
       const res = await fetch(
-        `http://192.168.1.102:3000/api/spotify/search?q=${encodeURIComponent(query)}`
+        `https://music-app-1-zb1y.onrender.com/api/spotify/search?q=${encodeURIComponent(query)}`
       );
       if (!res.ok) throw new Error("Failed to fetch tracks");
 

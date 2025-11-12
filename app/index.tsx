@@ -131,7 +131,7 @@ export default function App() {
 
   return (
     <SafeAreaProvider>
-      <SafeAreaView style={{ flex: 1 }}>
+      <SafeAreaView style={{ flex: 1}}>
         <NavigationContainer>
           <Layout />
         </NavigationContainer>

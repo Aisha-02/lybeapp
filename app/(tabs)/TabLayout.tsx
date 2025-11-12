@@ -17,8 +17,8 @@ const TabLayout = () => {
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: Colors.buttonBackground,
-        tabBarInactiveTintColor: Colors.buttonText,
+        tabBarActiveTintColor: Colors.background,
+        tabBarInactiveTintColor: Colors.icon,
         tabBarStyle: styles.tabBarStyle,
         tabBarLabelStyle: styles.tabBarLabelStyle,
       }}

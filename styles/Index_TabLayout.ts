@@ -6,11 +6,11 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: Colors.card_background
+        backgroundColor: 'black'
     },
 
     tabBarStyle: {
-        backgroundColor: Colors.background,
+        backgroundColor: Colors.googletextcolor,
         paddingBottom: 14,
         height: 75,
     },

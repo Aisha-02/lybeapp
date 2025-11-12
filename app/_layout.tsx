@@ -32,7 +32,7 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 
 const AppLayout = () => {
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: 'Black' }}>
+    <SafeAreaView style={{ flex: 1  , backgroundColor : 'Black'}}>
     <Stack.Navigator
       initialRouteName="Login"
       screenOptions={{

@@ -73,14 +73,14 @@ const styles = StyleSheet.create({
   },
   orText: {
     marginHorizontal: 10,
-    color: Colors.subText,
+    color: Colors.text,
     fontSize: 14,
   },
   googleButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    borderColor: Colors.inputBackground,
+    borderColor: Colors.buttonBackground,
     borderWidth: 1,
     paddingVertical: 12,
     borderRadius: 8,
@@ -101,7 +101,7 @@ const styles = StyleSheet.create({
   },
   googleButtonText: {
     fontSize: 16,
-    color: Colors.buttonText,
+    color: Colors.googletextcolor,
     fontWeight: 'bold',
   },
   registerText: {
