@@ -38,7 +38,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.avatar,
   },
   chatIcon: {
-    padding: 4,
+    padding: 2,
   },
   menuIcon: {
     padding: 10,

@@ -140,7 +140,8 @@ const Home = () => {
             style={styles.artistImageStyle}
             resizeMode="cover"
           />
-          <Text style={styles.artistNameText} numberOfLines={2}>
+          <Text style={styles.artistNameText} numberOfLines={1}
+           ellipsizeMode='tail'>
             {item.name}
           </Text>
         </View>
@@ -159,10 +160,6 @@ const Home = () => {
 
           <TouchableOpacity style={styles.chatIcon} onPress={() => navigation.navigate('notification')}>
             <Ionicons name="notifications-outline" size={28} color={Colors.iconActive} />
-          </TouchableOpacity>
-       
-          <TouchableOpacity style={styles.chatIcon} onPress={() => navigation.navigate('messages')} >
-            <Ionicons name="chatbubble-ellipses-outline" size={28} color={Colors.iconActive} />
           </TouchableOpacity>
 
           <TouchableOpacity

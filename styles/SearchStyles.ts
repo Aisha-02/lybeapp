@@ -43,7 +43,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 24,
     fontWeight: "700",
-    color: Colors.loading,      // Spotify green color for a fresh vibe
+    color: Colors.buttonBackground,      // Spotify green color for a fresh vibe
     marginVertical: 16,
     marginLeft: 12,
   },
@@ -55,7 +55,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
   },
   trackName: {
-    color: Colors.track, // white for track name
+    color: Colors.buttonBackground, // white for track name
     fontSize: 16,
     fontWeight: "bold",
   },

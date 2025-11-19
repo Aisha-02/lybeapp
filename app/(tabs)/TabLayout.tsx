@@ -5,10 +5,10 @@ import styles from '../../styles/Index_TabLayout';
 
 // Screens
 import ConnectScreen from './connect';
-import JamroomScreen from './jamroom';
 import HomeScreen from './home';
 import SearchScreen from './search';
 import LibraryScreen from './library';
+import MessagesScreen from '@/screens/messages';
 
 const Tab = createBottomTabNavigator();
 
@@ -33,11 +33,11 @@ const TabLayout = () => {
         }}
       />
       <Tab.Screen
-        name="Jamroom"
-        component={JamroomScreen}
+        name="Chat"
+        component={MessagesScreen}
         options={{
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? 'musical-notes' : 'musical-notes-outline'} size={24} color={color} />
+            <Ionicons name={focused ? 'chatbubble-ellipses' : "chatbubble-ellipses-outline" } size={24} color={color} />
           ),
         }}
       />

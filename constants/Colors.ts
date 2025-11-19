@@ -25,9 +25,10 @@ export const Colors = {
   border: '#E6E9EE',             // Subtle border color
   iconActive: '#0F172A',         // Active icon color (match text)
   ionIcon: '#9CA3AF',            // Secondary icon color
+  trackicons:'#dae6f8',        // Track item icons
  
   // Activity / loading
-  loading: '#10B981',            // Green for progress/loading accents
+  loading: '#dae6f8',            // Green for progress/loading accents
   activity: '#2563EB',           // Activity indicator primary color
   gradient: '#60A5FA',           // Light blue for gradients
   placeholder: '#9CA3AF',        // Placeholder text color
@@ -41,9 +42,9 @@ export const Colors = {
   linear_grad6: '#60A5FA',
  
   // Slider colors
-  minTrackTint: '#10B981',       // Green accent
-  maxTrackTint: '#E6E9EE',       // Light track background
-  thumbTint: '#2563EB',          // Thumb color
+  minTrackTint:'#a1d7f9',       // Green accent
+  maxTrackTint:'#a1d7f9',       // Light track background
+  thumbTint: '#dae6f8',          // Thumb color
  
   // Card and list colors
   card_background: '#FFFFFF',    // White card background with subtle shadow in UI
@@ -62,7 +63,7 @@ export const Colors = {
   albumInfo: '#6B7280',          // Album info text color
   albumImage: '#F3F4F6',         // Background color for absent album images
   borderBottom: '#E6E9EE',       // Border color for track items
-  track: '#0F172A',              // Track name color
+  track: '#dae6f8'   ,           // Track name color
   artist: '#6B7280',             // Artist name color
   artist2: '#9CA3AF',            // Secondary artist name color
   error: '#EF4444',              // Error text color (red)

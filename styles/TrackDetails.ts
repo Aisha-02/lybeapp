@@ -77,7 +77,7 @@ export default StyleSheet.create({
   },
 
   timeText: {
-    color: Colors.text,
+    color: Colors.subText,
     fontSize: 12,
   },
 
@@ -104,7 +104,7 @@ export default StyleSheet.create({
   },
 
   noPreview: {
-    color: Colors.text,
+    color: Colors.subText,
     marginTop: 30,
     fontSize: 16,
     fontStyle: 'italic',
@@ -123,7 +123,7 @@ export default StyleSheet.create({
 
   buttonText: {
     marginTop: 4,
-    color: Colors.text,
+    color: Colors.subText,
     fontSize: 14,
   },
 
@@ -153,7 +153,7 @@ export default StyleSheet.create({
   modalTitle: {
     fontSize: 22,
     fontWeight: '700',
-    color: Colors.text,
+    color: Colors.subText,
     marginBottom: 20,
     textAlign: 'center',
   },
