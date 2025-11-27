@@ -1,23 +1,18 @@
-import React, { useEffect, useRef, useState, useCallback } from "react";
+import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   View,
   Text,
   TouchableOpacity,
-  FlatList,
-  TextInput,
-  Modal,
   Image,
   ImageBackground,
-  Alert,
 } from "react-native";
 import styles from "../styles/TrackDetails";
 import Toast from "react-native-toast-message";
 import { Colors } from "../constants/Colors";
 import { Ionicons, AntDesign } from "@expo/vector-icons";
-import { auth, db } from "../firebaseconfig";
-import { Audio } from "expo-av";
 import Slider from "@react-native-community/slider";
+import { auth, db } from "../firebaseconfig";
 import {
   doc,
   collection,
@@ -26,47 +21,62 @@ import {
   deleteDoc,
   getDocs,
 } from "firebase/firestore";
+
 import PlaylistModal from "@/components/PlaylistModal";
+
+import TrackPlayer, {
+  State,
+  usePlaybackState,
+  useProgress,
+} from "react-native-track-player";
 
 const fallbackImage = "https://via.placeholder.com/500x500.png?text=No+Image";
 
 const TrackDetails = ({ route, navigation }: any) => {
   const { track } = route.params;
 
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [position, setPosition] = useState(0);
-  const [duration, setDuration] = useState(0);
+  const playbackState = usePlaybackState();
+  const { position, duration } = useProgress(200);
+
   const [volume, setVolume] = useState(1);
   const [liked, setLiked] = useState(false);
   const [deezerPreview, setDeezerPreview] = useState<string | null>(null);
   const [dzLoading, setDzLoading] = useState(false);
 
-  // Playlist states
   const [playlistModalVisible, setPlaylistModalVisible] = useState(false);
   const [userPlaylists, setUserPlaylists] = useState<Array<any>>([]);
 
+  const albumImage = track.album?.images?.[0]?.url || track.imageUrl || fallbackImage;
+  const artistNames = track.artists?.map((a: any) => a.name).join(", ");
 
-  const soundRef = useRef<Audio.Sound | null>(null);
-
+  /* -----------------------------
+        LOAD LIKE STATUS
+  ----------------------------- */
   useEffect(() => {
     const checkIfLiked = async () => {
       const user = auth.currentUser;
       if (!user) return;
 
-      const likedRef = doc(collection(db, "users", user.uid, "likedSongs"), track.id);
-      const docSnap = await getDoc(likedRef);
-      if (docSnap.exists()) setLiked(true);
+      const ref = doc(collection(db, "users", user.uid, "likedSongs"), track.id);
+      const snap = await getDoc(ref);
+      if (snap.exists()) setLiked(true);
+      else setLiked(false);
     };
+
     checkIfLiked();
   }, [track.id]);
 
-  const fetchDeezerPreview = useCallback(async () => {
+  /* -----------------------------
+        DEEZER FALLBACK PREVIEW
+  ----------------------------- */
+  const fetchDeezerPreview = async () => {
     setDzLoading(true);
     try {
-      const query = `${track.name} ${track.artists?.map((a: any) => a.name).join(" ")}`;
-      const response = await fetch(
-        `https://deezerdevs-deezer.p.rapidapi.com/search?q=${encodeURIComponent(query)}`,
+      const query = `${track.name} ${artistNames}`;
+      const res = await fetch(
+        `https://deezerdevs-deezer.p.rapidapi.com/search?q=${encodeURIComponent(
+          query
+        )}`,
         {
           method: "GET",
           headers: {
@@ -75,15 +85,76 @@ const TrackDetails = ({ route, navigation }: any) => {
           },
         }
       );
-      const data = await response.json();
-      if (data?.data?.[0]?.preview) setDeezerPreview(data.data[0].preview);
-    } catch (err) {
-      console.error("Deezer fetch error:", err);
-    } finally {
-      setDzLoading(false);
-    }
-  }, [track]);
 
+      const json = await res.json();
+      if (json?.data?.[0]?.preview) {
+        setDeezerPreview(json.data[0].preview);
+      }
+    } catch (err) {
+      console.log("Deezer fetch error:", err);
+    }
+    setDzLoading(false);
+  };
+
+  useEffect(() => {
+    if (!track.preview_url) fetchDeezerPreview();
+  }, [track.id]);
+
+  /* -----------------------------
+      LOAD NEW TRACK ON SCREEN OPEN
+  ----------------------------- */
+  useEffect(() => {
+    const loadTrack = async () => {
+      try {
+        await TrackPlayer.reset();
+
+        await TrackPlayer.add({
+          id: track.id,
+          url: track.preview_url || deezerPreview,
+          title: track.name,
+          artist: artistNames,
+          artwork: albumImage,
+        });
+      } catch (e) {
+        console.log("Track load error:", e);
+      }
+    };
+
+    loadTrack();
+  }, [track.id, deezerPreview]);
+
+  /* -----------------------------
+          PLAY / PAUSE
+  ----------------------------- */
+  const togglePlayback = async () => {
+    try {
+      const state = await TrackPlayer.getPlaybackState();
+
+      if (state.state === State.Playing) {
+        await TrackPlayer.pause();
+      } else {
+        await TrackPlayer.play();
+      }
+    } catch (err) {
+      console.log("toggle error:", err);
+    }
+  };
+
+  /* -----------------------------
+          SEEK / VOLUME
+  ----------------------------- */
+  const onSlidingComplete = async (value: number) => {
+    await TrackPlayer.seekTo(value);
+  };
+
+  const onVolumeChange = async (v: number) => {
+    setVolume(v);
+    await TrackPlayer.setVolume(v);
+  };
+
+  /* -----------------------------
+          LIKE / UNLIKE
+  ----------------------------- */
   const handleLikeToggle = async () => {
     const user = auth.currentUser;
     if (!user)
@@ -93,188 +164,110 @@ const TrackDetails = ({ route, navigation }: any) => {
         text2: "Please log in first.",
       });
 
-    const likedRef = doc(collection(db, "users", user.uid, "likedSongs"), track.id);
+    const ref = doc(collection(db, "users", user.uid, "likedSongs"), track.id);
 
     try {
-      const docSnap = await getDoc(likedRef);
-      if (docSnap.exists()) {
-        await deleteDoc(likedRef);
+      const snap = await getDoc(ref);
+      if (snap.exists()) {
+        await deleteDoc(ref);
         setLiked(false);
       } else {
-        await setDoc(likedRef, {
+        await setDoc(ref, {
           id: track.id,
           name: track.name,
           artists: track.artists?.map((a: any) => a.name),
-          album: {
-            name: track.album?.name,
-            images: track.album?.images || [{ url: fallbackImage }],
-            release_date: track.album?.release_date,
-          },
-          preview_url: track.preview_url || deezerPreview || null,
+          preview_url: track.preview_url || deezerPreview,
           likedAt: new Date(),
         });
         setLiked(true);
       }
-    } catch (error) {
-      console.error("Error toggling like:", error);
+    } catch (err) {
+      console.log("Like error:", err);
     }
   };
 
-  const loadAudio = async (url: string) => {
-    setLoading(true);
-    try {
-      const { sound, status } = await Audio.Sound.createAsync(
-        { uri: url },
-        { shouldPlay: true, volume },
-        onPlaybackStatusUpdate
-      );
-      soundRef.current = sound;
-      setIsPlaying(true);
-      if (status.isLoaded) setDuration(status.durationMillis || 0);
-    } catch {
-      Alert.alert("Audio Error", "Failed to load audio preview.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const onPlaybackStatusUpdate = (status: any) => {
-    if (!status.isLoaded) return;
-    setPosition(status.positionMillis);
-    setDuration(status.durationMillis || 0);
-    if (status.didJustFinish) {
-      setIsPlaying(false);
-      soundRef.current?.setPositionAsync(0);
-    }
-  };
-
-  const togglePlayback = async () => {
-    const url = track.preview_url || deezerPreview;
-    if (!url) return;
-
-    if (!soundRef.current) {
-      await loadAudio(url);
-    } else {
-      const status = await soundRef.current.getStatusAsync();
-      if ("isPlaying" in status && status.isPlaying) {
-        await soundRef.current.pauseAsync();
-        setIsPlaying(false);
-      } else {
-        await soundRef.current.playAsync();
-        setIsPlaying(true);
-      }
-    }
-  };
-
-  const onSlidingComplete = async (value: number) => {
-    if (soundRef.current) await soundRef.current.setPositionAsync(value);
-  };
-
-  const onVolumeChange = async (value: number) => {
-    setVolume(value);
-    if (soundRef.current) await soundRef.current.setVolumeAsync(value);
-  };
-
-  const formatMillis = (millis: number) => {
-    const total = Math.floor(millis / 1000);
-    const mins = Math.floor(total / 60);
-    const secs = total % 60;
-    return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
-  };
-
-  useEffect(() => {
-    if (!track.preview_url) fetchDeezerPreview();
-  }, [track.preview_url]);
-
-  useEffect(() => {
-    return () => {
-      soundRef.current?.unloadAsync();
-    };
-  }, []);
-
-  const albumImage = track.album?.images?.[0]?.url || fallbackImage;
-  const artistNames = Array.isArray(track.artists)
-    ? track.artists.map((a: any) => (typeof a === "string" ? a : a.name)).join(", ")
-    : "Unknown";
-
+  /* -----------------------------
+        PLAYLIST MODAL
+  ----------------------------- */
   const loadPlaylists = async () => {
     const user = auth.currentUser;
     if (!user) return;
 
-    const snapshot = await getDocs(collection(db, "users", user.uid, "playlists"));
-
-    const list = snapshot.docs.map((d) => ({
-      id: d.id,
-      name: d.data().name,
-      createdAt: d.data().createdAt,
-    }));
-
-    setUserPlaylists([...list]);   // ⭐ ensure new array reference
+    const snap = await getDocs(collection(db, "users", user.uid, "playlists"));
+    setUserPlaylists(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
   };
 
-  // open modal
   const openPlaylistModal = () => {
     loadPlaylists();
     setPlaylistModalVisible(true);
   };
 
-  const handleSongAdded = () => {
-    loadPlaylists();     // refresh playlists
-    setPlaylistModalVisible(false); // close modal
-  }
+  /* -----------------------------
+              UI
+  ----------------------------- */
+  const isPlaying = playbackState.state === State.Playing;
+  const formatTime = (sec: number) => {
+    const s = Math.floor(sec || 0);
+    return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+  };
 
   return (
     <ImageBackground source={{ uri: albumImage }} style={styles.bg} blurRadius={20}>
       <View style={styles.overlay}>
+        {/* Back */}
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color={Colors.trackicons} />
+          <Ionicons name="arrow-back" size={26} color={Colors.trackicons} />
         </TouchableOpacity>
 
+        {/* Album Art */}
         <Image source={{ uri: albumImage }} style={styles.albumImage} />
 
+        {/* Title */}
         <Text style={styles.trackName} numberOfLines={1}>
           {track.name}
         </Text>
         <Text style={styles.artists}>{artistNames}</Text>
 
+        {/* Slider */}
         <View style={styles.sliderWrapper}>
           <Slider
             style={styles.slider}
             minimumValue={0}
-            maximumValue={duration}
+            maximumValue={duration || 1}
             value={position}
             onSlidingComplete={onSlidingComplete}
             minimumTrackTintColor={Colors.minTrackTint}
             maximumTrackTintColor={Colors.maxTrackTint}
             thumbTintColor={Colors.thumbTint}
           />
+
           <View style={styles.timeContainer}>
-            <Text style={styles.timeText}>{formatMillis(position)}</Text>
-            <Text style={styles.timeText}>{formatMillis(duration)}</Text>
+            <Text style={styles.timeText}>{formatTime(position)}</Text>
+            <Text style={styles.timeText}>{formatTime(duration)}</Text>
           </View>
         </View>
 
+        {/* Controls */}
         <View style={styles.controls}>
+          {/* Like */}
           <TouchableOpacity onPress={handleLikeToggle}>
-            <AntDesign name={liked ? "heart" : "hearto"} size={28} color={Colors.trackicons} />
+            <AntDesign
+              name={liked ? "heart" : "hearto"}
+              size={28}
+              color={Colors.trackicons}
+            />
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[styles.playButton, loading && { opacity: 0.5 }]}
-            onPress={togglePlayback}
-            disabled={loading}
-          >
-            {loading ? (
-              <ActivityIndicator size="small" color={Colors.loading} />
-            ) : (
-              <Ionicons
-                name={isPlaying ? "pause-circle" : "play-circle"}
-                size={64}
-                color={Colors.loading}
-              />
-            )}
+          {/* Play Pause */}
+          <TouchableOpacity style={styles.playButton} onPress={togglePlayback}>
+            <Ionicons
+              name={isPlaying ? "pause-circle" : "play-circle"}
+              size={70}
+              color={Colors.loading}
+            />
           </TouchableOpacity>
 
+          {/* Volume */}
           <View style={styles.volumeControl}>
             <Ionicons name="volume-low" size={20} color={Colors.trackicons} />
             <Slider
@@ -292,42 +285,36 @@ const TrackDetails = ({ route, navigation }: any) => {
           </View>
         </View>
 
+        {/* Playlist Modal Trigger */}
         <View style={styles.actionButtons}>
           <TouchableOpacity style={styles.actionButton} onPress={openPlaylistModal}>
             <Ionicons name="add-circle-outline" size={24} color={Colors.trackicons} />
             <Text style={styles.buttonText}>Add to Playlist</Text>
           </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.actionButton}
-            onPress={() =>
-              navigation.navigate("Home", {
-                screen: "Connect",
-                params: { track },
-              })
-            }
-          >
+          <TouchableOpacity style={styles.actionButton} onPress={() => navigation.navigate("Home", { screen: "Connect", params: { track } })} >
             <Ionicons name="send" size={24} color={Colors.trackicons} />
             <Text style={styles.buttonText}>Dedicate</Text>
           </TouchableOpacity>
         </View>
 
+        {/* Deezer Loading */}
         {!track.preview_url && dzLoading && (
-          <ActivityIndicator size="large" color={Colors.loading} style={styles.activityIndicator} />
+          <ActivityIndicator size="large" color={Colors.loading} />
         )}
 
         {!track.preview_url && !deezerPreview && !dzLoading && (
           <Text style={styles.noPreview}>No preview available</Text>
         )}
+
+        {/* Playlist Modal */}
         <PlaylistModal
           visible={playlistModalVisible}
           playlists={userPlaylists}
           track={track}
           deezerPreview={deezerPreview}
           onRefresh={loadPlaylists}
-          onAdded={handleSongAdded}
+          onAdded={() => setPlaylistModalVisible(false)}
         />
-
       </View>
     </ImageBackground>
   );

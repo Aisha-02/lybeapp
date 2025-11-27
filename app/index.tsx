@@ -15,6 +15,10 @@ import Constants from 'expo-constants';
 import { setDoc, doc , getDoc} from 'firebase/firestore';
 import { db } from '../firebaseconfig';
 import { useNavigation } from "@react-navigation/native";
+import { navigationRef } from '../navigation/NavigationRef';
+import TrackPlayer from 'react-native-track-player';
+
+TrackPlayer.registerPlaybackService(() => require('../scripts/service'));
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -132,7 +136,7 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <SafeAreaView style={{ flex: 1}}>
-        <NavigationContainer>
+        <NavigationContainer ref={navigationRef}>
           <Layout />
         </NavigationContainer>
         <Toast />

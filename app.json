@@ -9,7 +9,8 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.lybe.android"
     },
     "android": {
       "adaptiveIcon": {
@@ -27,7 +28,7 @@
     },
     "plugins": [
       "expo-router",
-       "expo-notifications",
+      "expo-notifications",
       [
         "expo-splash-screen",
         {
@@ -48,9 +49,7 @@
       }
     },
     "owner": "lybeofficials",
-    "runtimeVersion": {
-      "policy": "appVersion"
-    },
+    "runtimeVersion": "1.0.0",
     "updates": {
       "url": "https://u.expo.dev/89c9a0d9-5ae8-4526-993f-cd286cb7dcb3"
     }
